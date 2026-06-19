@@ -37,28 +37,24 @@ Page({
   },
 
   onLoad() {
-    this.initLocation()
+    const app = getApp()
+    // 等待定位完成后再加载地图
+    app.onLocationReady((loc) => {
+      if (loc) {
+        this.useLocation(loc)
+      } else {
+        // 定位失败，提示用户并降级到成都
+        wx.showToast({ title: '定位失败，将使用默认位置', icon: 'none' })
+        this.useLocation({ lat: 30.658, lng: 104.082, name: '定位失败（默认成都）' })
+      }
+    })
   },
 
   onShow() {
-    // 每次回到首页刷新位置并重新加载
-    this.initLocation()
-  },
-
-  // 初始化位置
-  initLocation() {
-    const app = getApp()
-    // 如果已有真实位置，直接使用
-    if (app.globalData.currentLocation && app.globalData.currentLocation.lat !== 30.658) {
-      this.useLocation(app.globalData.currentLocation)
-    } else {
-      // 重新获取位置
-      app.getLocation()
-      // 等待一小段时间获取位置（getLocation是异步的）
-      setTimeout(() => {
-        const loc = app.globalData.currentLocation
-        this.useLocation(loc)
-      }, 1500)
+    // 每次回到首页，如果已有定位则刷新厕所列表
+    const loc = getApp().globalData.currentLocation
+    if (loc && loc.lat) {
+      this.useLocation(loc)
     }
   },
 

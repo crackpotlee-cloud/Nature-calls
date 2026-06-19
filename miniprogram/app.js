@@ -3,15 +3,15 @@ App({
     userInfo: null,
     token: null,
     mapKey: '5CRBZ-IFJW7-YE7XS-HBX5B-R2HSJ-SLBCC',
-    currentLocation: {
-      lat: 30.658,
-      lng: 104.082,
-      name: '成都 · 春熙路IFS附近'
-    },
+    // 初始不写死任何位置，等 getLocation 异步获取后再赋值
+    // 用 null 标记「尚未定位」，页面渲染前需检查此值
+    currentLocation: null,
     currentScene: 'smart',
     currentToilet: null,
     isNight: false,
-    isMealTime: false
+    isMealTime: false,
+    // 定位回调列表，页面可注册回调等待定位完成
+    _locationCallbacks: []
   },
 
   onLaunch() {
@@ -35,8 +35,18 @@ App({
     // 微信登录
     this.wxLogin()
 
-    // 获取位置
+    // 获取位置（异步，完成后通知所有等待中的页面）
     this.getLocation()
+  },
+
+  // 注册定位完成后的回调
+  onLocationReady(callback) {
+    if (this.globalData.currentLocation) {
+      // 已经定位成功，直接执行回调
+      callback(this.globalData.currentLocation)
+    } else {
+      this.globalData._locationCallbacks.push(callback)
+    }
   },
 
   wxLogin() {
@@ -66,11 +76,18 @@ App({
           name: '当前位置'
         }
         console.log('[app.js] 获取定位成功:', this.globalData.currentLocation)
+
+        // 通知所有等待定位的页面
+        const callbacks = this.globalData._locationCallbacks
+        this.globalData._locationCallbacks = []
+        callbacks.forEach(cb => cb(this.globalData.currentLocation))
       },
-      fail: () => {
-        // 无法获取定位时，保持现有值（已在 onLaunch 前初始化为默认值）
-        // 但给一个提示，让用户知道定位失败
-        console.warn('[app.js] 获取定位失败，将使用默认位置')
+      fail: (err) => {
+        console.warn('[app.js] 获取定位失败:', err)
+        // 定位失败时，仍通知回调（页面自行处理）
+        const callbacks = this.globalData._locationCallbacks
+        this.globalData._locationCallbacks = []
+        callbacks.forEach(cb => cb(null))
       }
     })
   }
