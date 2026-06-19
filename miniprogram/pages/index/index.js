@@ -6,16 +6,15 @@ const constants = require('../../utils/constants')
 
 Page({
   data: {
-    mapKey: '5CRBZ-IFJW7-YE7XS-HBX5B-R2HSJ-SLBCC', // 腾讯地图Key
-    latitude: 0,   // 初始化为0，等待获取真实位置后设置
-    longitude: 0,
+    mapKey: '5CRBZ-IFJW7-YE7XS-HBX5B-R2HSJ-SLBCC',
+    latitude: 30.658,
+    longitude: 104.082,
     mapScale: 16,
     locationName: '定位中...',
     markers: [],
     calloutMarkerId: 0,
     calloutName: '',
 
-    // 选中的厕所
     selectedToilet: {
       id: '',
       name: '',
@@ -30,66 +29,59 @@ Page({
     accessLabel: '',
     qualityLabel: '',
 
-    // UI状态
     markerCardVisible: false,
     scenePanelVisible: false,
     loadingVisible: false
   },
 
   onLoad() {
-    const app = getApp()
-    // 等待定位完成后再加载地图
-    app.onLocationReady((loc) => {
-      if (loc) {
-        this.useLocation(loc)
-      } else {
-        // 定位失败，提示用户并降级到成都
-        wx.showToast({ title: '定位失败，将使用默认位置', icon: 'none' })
-        this.useLocation({ lat: 30.658, lng: 104.082, name: '定位失败（默认成都）' })
-      }
-    })
+    this.initAndLoad()
   },
 
   onShow() {
-    // 每次回到首页，如果已有定位则刷新厕所列表
-    const loc = getApp().globalData.currentLocation
-    if (loc && loc.lat) {
-      this.useLocation(loc)
-    }
+    this.initAndLoad()
   },
 
-  // 使用位置加载厕所
-  useLocation(loc) {
-    if (!loc || !loc.lat) {
-      // 如果仍然没有位置，使用成都作为最后的降级
-      loc = { lat: 30.658, lng: 104.082, name: '成都 · 春熙路IFS附近（定位失败）' }
-    }
-    this.setData({
-      latitude: loc.lat,
-      longitude: loc.lng,
-      locationName: loc.name || '当前位置'
+  // 获取定位 → 加载厕所
+  initAndLoad() {
+    const app = getApp()
+    // 主动获取最新定位，不再依赖 app.js 的旧值
+    wx.getLocation({
+      type: 'gcj02',
+      success: (res) => {
+        app.globalData.currentLocation = {
+          lat: res.latitude,
+          lng: res.longitude,
+          name: '当前位置'
+        }
+        this.setData({
+          latitude: res.latitude,
+          longitude: res.longitude,
+          locationName: '当前位置'
+        })
+        this.loadNearbyToilets()
+      },
+      fail: () => {
+        // 降级使用已有的 globalData 值
+        const loc = app.globalData.currentLocation
+        this.setData({
+          latitude: loc.lat,
+          longitude: loc.lng,
+          locationName: loc.name || '定位失败'
+        })
+        this.loadNearbyToilets()
+      }
     })
-    this.loadNearbyToilets()
   },
 
   // 加载附近厕所
   async loadNearbyToilets() {
     try {
-      const loc = {
-        lat: this.data.latitude,
-        lng: this.data.longitude
-      }
-      // 如果位置还没初始化(仍然是0)，不发起请求
-      if (!loc.lat || !loc.lng) {
-        return
-      }
-
       const data = await api.getNearbyToilets({
-        lat: loc.lat,
-        lng: loc.lng,
+        lat: this.data.latitude,
+        lng: this.data.longitude,
         radius: 2000
       })
-
       const markers = mapUtil.createToiletMarkers(data.items)
       this.setData({ markers })
     } catch (err) {
@@ -130,14 +122,12 @@ Page({
     })
   },
 
-  // 地图空白区域点击
   onMapTap() {
     if (this.data.markerCardVisible) {
       this.setData({ markerCardVisible: false })
     }
   },
 
-  // 标记卡片点击 → 跳转详情
   onMarkerCardTap() {
     if (this.data.selectedToilet.id) {
       wx.navigateTo({
@@ -146,13 +136,11 @@ Page({
     }
   },
 
-  // 卡片"去这里"按钮 → 跳转导航
   onGoToNav() {
     const toilet = this.data.selectedToilet
     if (!toilet.id) return
 
     const app = getApp()
-    // 从 markers 中找到完整数据传给 nav
     const marker = this.data.markers.find(m => m.id === toilet.id)
     app.globalData.currentToilet = marker && marker._data ? marker._data : toilet
 
@@ -161,24 +149,20 @@ Page({
     })
   },
 
-  // 急按钮点击 → 快速搜索
   onEmergencyTap() {
     this.quickSearch('smart')
   },
 
-  // 长按急按钮 → 场景选择
   onEmergencyLongPress() {
     this.setData({ scenePanelVisible: true })
   },
 
-  // 快速搜索（级联搜索：500m → 1000m）
   async quickSearch(scene) {
     this.setData({ loadingVisible: true })
     try {
       const app = getApp()
       const loc = app.globalData.currentLocation
 
-      // 级联搜索：先尝试 500m
       let data = await api.recommendToilet({
         scene,
         lat: loc.lat,
@@ -187,7 +171,6 @@ Page({
         top_k: 5
       })
 
-      // 500m 无结果 → 自动扩大至 1000m
       if (!data.recommendations || data.recommendations.length === 0) {
         wx.showToast({ title: '附近厕所较少，已扩大搜索范围', icon: 'none', duration: 2000 })
         data = await api.recommendToilet({
@@ -199,14 +182,12 @@ Page({
         })
       }
 
-      // 1000m 仍无结果 → 提示用户
       if (!data.recommendations || data.recommendations.length === 0) {
         this.setData({ loadingVisible: false })
         wx.showToast({ title: '当前区域暂无厕所数据', icon: 'none', duration: 3000 })
         return
       }
 
-      // 存储推荐结果到全局
       app.globalData.currentScene = scene
       app.globalData.currentRecommendations = data.recommendations
       app.globalData.currentToilet = data.recommendations[0]
@@ -222,33 +203,28 @@ Page({
     }
   },
 
-  // 场景选择
   onSelectScene(e) {
     const scene = e.currentTarget.dataset.scene
     this.setData({ scenePanelVisible: false })
     this.quickSearch(scene)
   },
 
-  // 隐藏场景面板
   hideScenePanel() {
     this.setData({ scenePanelVisible: false })
   },
 
-  // 定位按钮
   onLocate() {
     const mapCtx = wx.createMapContext('homeMap')
     mapCtx.moveToLocation()
     wx.showToast({ title: '已定位到当前位置', icon: 'none', duration: 1500 })
   },
 
-  // 贡献厕所
   onAddToilet() {
     wx.navigateTo({
       url: '/pages/contribute/contribute'
     })
   },
 
-  // 分享
   onShareAppMessage() {
     return {
       title: '三急 - 找到最近的厕所',
