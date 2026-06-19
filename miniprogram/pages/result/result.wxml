@@ -1,0 +1,97 @@
+<!-- pages/result/result.wxml - 推荐结果页 -->
+<view class="page-container">
+
+  <!-- 地图区域 (上55%) -->
+  <map
+    id="resultMap"
+    class="result-map"
+    subkey="{{mapKey}}"
+    latitude="{{latitude}}"
+    longitude="{{longitude}}"
+    scale="16"
+    markers="{{markers}}"
+    polyline="{{polyline}}"
+    show-location="{{true}}"
+    show-compass="{{false}}"
+    enable-3D="{{false}}"
+    enable-overlooking="{{false}}"
+    enable-zoom="{{true}}"
+    enable-scroll="{{true}}"
+    enable-rotate="{{false}}"
+  >
+  </map>
+
+  <!-- 顶部返回栏 -->
+  <view class="result-header">
+    <view class="back-btn" bindtap="onBack">
+      <text class="back-arrow">←</text>
+      <text class="back-text">返回</text>
+    </view>
+  </view>
+
+  <!-- 底部推荐卡片 -->
+  <view class="result-card" style="transform: translateY({{cardTranslateY}}px)">
+    <view class="card-handle">
+      <view class="card-handle-bar"></view>
+    </view>
+
+    <!-- 场景标签 -->
+    <text wx:if="{{sceneBadge}}" class="scene-tag">{{sceneBadge}}</text>
+
+    <!-- 最佳推荐标签 -->
+    <text class="badge">🥇 最佳推荐</text>
+
+    <!-- 厕所名称 -->
+    <text class="toilet-name">{{toiletName}}</text>
+
+    <!-- 信息行 -->
+    <view class="toilet-info">
+      <text>🚶 {{walkTimeText}}</text>
+      <view class="status-indicator">
+        <view class="status-dot {{statusColor}}"></view>
+        <text class="status-shape">{{statusShape}}</text>
+        <text>{{statusText}}</text>
+      </view>
+    </view>
+
+    <!-- 准入标签 -->
+    <text class="tag">{{accessTypeText}}</text>
+
+    <!-- 质量标签 -->
+    <view class="quality-tags">
+      <view wx:for="{{highlights}}" wx:key="*this" class="quality-tag">
+        <text>{{item}}</text>
+      </view>
+    </view>
+
+    <!-- 去这里按钮 -->
+    <button class="btn-primary" bindtap="onStartNav">去这里</button>
+
+    <!-- 上滑提示（仅在handle区域触发） -->
+    <view class="backup-hint" bindtap="toggleBackup">
+      <text class="backup-hint-icon">{{backupVisible ? '↓' : '↑'}}</text>
+      <text class="backup-hint-text">{{backupVisible ? '收起列表' : '查看其他厕所'}}</text>
+    </view>
+  </view>
+
+  <!-- 备选列表（独立面板，无全屏遮罩） -->
+  <view class="backup-panel {{backupVisible ? 'show' : ''}}">
+    <view class="backup-panel-handle" bindtap="toggleBackup">
+      <view class="sheet-handle-bar"></view>
+    </view>
+    <text class="backup-title">附近其他厕所</text>
+    <scroll-view scroll-y class="backup-scroll">
+      <view wx:for="{{backupList}}" wx:key="rank" class="backup-item" bindtap="onSelectBackup" data-index="{{index}}">
+        <text class="backup-rank">{{item.rank}}</text>
+        <view class="backup-info">
+          <text class="backup-name">{{item.name}}</text>
+          <text class="backup-meta">{{item.walkTimeText}} · {{item.access_type}}</text>
+        </view>
+        <view class="status-indicator">
+          <view class="status-dot {{item.status_color}}"></view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+</view>

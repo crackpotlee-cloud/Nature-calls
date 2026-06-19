@@ -1,0 +1,355 @@
+/* pages/index/index.wxss - 首页样式 */
+
+.page-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* === 全屏地图 === */
+.home-map {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* === 地图自定义callout === */
+.map-callout {
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.callout-name {
+  font-size: 12px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* === 顶部信息栏 === */
+.home-header {
+  position: fixed;
+  top: 88px;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  z-index: 20;
+  pointer-events: auto;
+}
+.location-info {
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  max-width: 80%;
+  overflow: hidden;
+}
+.location-pin { font-size: 12px; flex-shrink: 0; }
+.location-text {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* === 右下角操作按钮组 === */
+.right-btn-group {
+  position: fixed;
+  right: 16px;
+  bottom: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 20;
+}
+
+/* === 右下角定位按钮 === */
+.locate-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.locate-icon {
+  font-size: 20px;
+  color: #1A73E8;
+  font-weight: 700;
+}
+
+/* === 右下角添加按钮 === */
+.add-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.add-btn-icon {
+  font-size: 22px;
+  color: #FF6B35;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* === "急"大按钮 === */
+.emergency-btn-container {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 20;
+}
+.emergency-btn {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #FF6B35, #FF5722);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(255,107,53,0.4);
+  position: relative;
+}
+.emergency-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(255,107,53,0.4);
+}
+.emergency-text {
+  font-size: 52px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+.emergency-hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 10px;
+}
+
+/* === 地图标记Waze风格大卡片 === */
+.marker-card {
+  position: fixed;
+  bottom: 80px;
+  left: 16px;
+  right: 16px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  z-index: 30;
+  display: none;
+  animation: cardSlideUp 0.25s ease;
+}
+.marker-card.show { display: block; }
+@keyframes cardSlideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.mc-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+/* 状态行 */
+.mc-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.mc-status-text {
+  color: #333;
+  font-weight: 500;
+}
+.mc-confidence {
+  color: #1A73E8;
+  font-weight: 600;
+}
+.mc-update {
+  color: #999;
+  margin-left: auto;
+}
+
+/* 标签行 */
+.mc-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.mc-tag {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.mc-tag-access {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+.mc-tag-quality {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+/* 步行信息 */
+.mc-walk-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.mc-walk { color: #333; font-weight: 500; }
+.mc-distance { color: #999; }
+
+/* 底部双按钮 */
+.mc-actions {
+  display: flex;
+  gap: 12px;
+}
+.mc-btn {
+  flex: 1;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+.mc-btn-go {
+  background: linear-gradient(135deg, #1A73E8, #1557B0);
+  color: #fff;
+}
+.mc-btn-detail {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+/* === 场景选择面板 === */
+.scene-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  display: block;
+  margin-bottom: 16px;
+  color: #333;
+}
+.scene-options {
+  display: flex;
+  gap: 12px;
+}
+.scene-option {
+  flex: 1;
+  background: #f8f8f8;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  padding: 20px 12px;
+  text-align: center;
+  transition: all 0.2s;
+}
+.scene-option:active {
+  border-color: #FF6B35;
+  background: #FFF5F0;
+}
+.scene-emoji {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 8px;
+}
+.scene-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+.scene-desc {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+  display: block;
+}
+
+/* === 面板可见性控制 === */
+/* 遮罩只覆盖场景面板，不阻挡地图操作 */
+.sheet-overlay {
+  display: none;
+}
+.sheet-overlay.show {
+  display: block;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 40;
+}
+.sheet-panel {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px 40px;
+  z-index: 50;
+  transition: bottom 0.3s ease;
+}
+.sheet-panel.show { display: block; }
+
+/* === 加载状态 === */
+.loading-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.9);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.loading-overlay.show {
+  display: flex;
+}
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f0f0f0;
+  border-top-color: #FF6B35;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 15px;
+  color: #666;
+  margin-top: 16px;
+}
+.loading-subtext {
+  font-size: 13px;
+  color: #aaa;
+  margin-top: 4px;
+}

@@ -1,0 +1,186 @@
+/* pages/result/result.wxss - 推荐结果页样式 */
+
+.page-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: #e8eef5;
+}
+
+/* === 地图 === */
+.result-map {
+  width: 100%;
+  height: 55%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* === 顶部返回栏 === */
+.result-header {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  z-index: 20;
+}
+.back-btn {
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.back-arrow {
+  font-size: 16px;
+  color: #FF6B35;
+}
+.back-text {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* === 底部推荐卡片 === */
+.result-card {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 12px 16px 40px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  z-index: 30;
+}
+.card-handle {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 12px;
+}
+.card-handle-bar {
+  width: 36px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+}
+
+.toilet-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.toilet-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.quality-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.backup-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #1A73E8;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+}
+.backup-hint-icon { font-size: 14px; }
+.backup-hint-text { font-size: 13px; }
+
+/* === 备选列表面板（无全屏遮罩） === */
+.backup-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 0 16px 30px;
+  z-index: 50;
+  display: none;
+  max-height: 55vh;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+.backup-panel.show { display: block; }
+.backup-panel-handle {
+  padding: 12px 0 8px;
+  display: flex;
+  justify-content: center;
+}
+.sheet-handle-bar {
+  width: 36px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+}
+.backup-scroll {
+  max-height: 40vh;
+}
+.backup-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #999;
+  display: block;
+  margin-bottom: 12px;
+}
+.backup-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.backup-item:last-child { border-bottom: none; }
+.backup-rank {
+  font-size: 16px;
+  width: 28px;
+  color: #999;
+  text-align: center;
+}
+.backup-info {
+  flex: 1;
+  margin-left: 8px;
+}
+.backup-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+.backup-meta {
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+  display: block;
+}
+
+/* 状态指示器 */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.status-dot.green { background: #34A853; }
+.status-dot.yellow { background: #FBBC04; }
+.status-dot.red { background: #EA4335; }
+.status-shape { font-size: 10px; margin-left: 2px; }

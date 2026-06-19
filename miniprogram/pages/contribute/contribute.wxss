@@ -1,0 +1,189 @@
+/* pages/contribute/contribute.wxss - 贡献厕所页样式 */
+
+.page-container {
+  width: 100vw;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* 头部 */
+.contribute-header {
+  background: #fff;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-top: 54px;
+}
+.contribute-back {
+  font-size: 20px;
+  color: #FF6B35;
+}
+.contribute-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* 步骤指示器 */
+.step-indicator {
+  background: #fff;
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+}
+.step-dot {
+  flex: 1;
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+}
+.step-dot.active {
+  background: #FF6B35;
+}
+
+/* 滚动 */
+.contribute-scroll {
+  height: calc(100vh - 140px);
+}
+.contribute-content {
+  padding: 16px;
+}
+
+/* 标签 */
+.contribute-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 8px;
+}
+.required {
+  color: #EA4335;
+}
+
+/* 输入框 */
+.contribute-input {
+  width: 100%;
+  height: 44px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #333;
+  background: #fff;
+  box-sizing: border-box;
+}
+.contribute-textarea {
+  width: 100%;
+  min-height: 80px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #333;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+/* 位置选择 */
+.location-picker {
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.location-picker-icon {
+  font-size: 16px;
+}
+.location-picker-hint {
+  color: #aaa;
+}
+.location-picker-val {
+  color: #333;
+}
+
+/* 选项组 */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 6px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #666;
+}
+.chip.selected {
+  border-color: #FF6B35;
+  background: #FFF5F0;
+  color: #FF6B35;
+}
+
+/* 设施 */
+.facility-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.facility-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #666;
+}
+.facility-chip.selected {
+  border-color: #34A853;
+  background: #E8F5E9;
+  color: #34A853;
+}
+
+/* 确认列表 */
+.confirm-list {
+  margin-top: 8px;
+}
+.confirm-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 13px;
+}
+.confirm-item:last-child {
+  border-bottom: none;
+}
+.confirm-key {
+  color: #999;
+  flex-shrink: 0;
+  width: 60px;
+}
+.confirm-val {
+  color: #333;
+  font-weight: 500;
+  text-align: right;
+}
+.confirm-val-long {
+  max-width: 200px;
+  line-height: 1.4;
+}
+
+/* 步骤按钮 */
+.step-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}

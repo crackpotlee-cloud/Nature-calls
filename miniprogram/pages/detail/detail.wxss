@@ -1,0 +1,125 @@
+/* pages/detail/detail.wxss - 厕所详情页样式 */
+
+.page-container {
+  width: 100vw;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* 头部 */
+.detail-header {
+  background: #fff;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-top: 54px;
+}
+.detail-back {
+  font-size: 20px;
+  color: #FF6B35;
+  cursor: pointer;
+}
+.detail-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* 滚动内容 */
+.detail-scroll {
+  height: calc(100vh - 100px);
+}
+.detail-content {
+  padding: 16px;
+  padding-bottom: 40px;
+}
+
+/* 行 */
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 13px;
+}
+.detail-row:last-child {
+  border-bottom: none;
+}
+.row-key {
+  color: #999;
+  flex-shrink: 0;
+}
+.row-val {
+  color: #333;
+  font-weight: 500;
+}
+.row-val-right {
+  text-align: right;
+  max-width: 220px;
+  line-height: 1.4;
+}
+
+/* 质量画像 */
+.quality-item {
+  margin-bottom: 16px;
+}
+.quality-item:last-child {
+  margin-bottom: 0;
+}
+.quality-label {
+  font-size: 12px;
+  color: #999;
+  display: block;
+  margin-bottom: 6px;
+}
+.quality-bar {
+  display: flex;
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.quality-fill {
+  height: 100%;
+}
+.quality-fill.good { background: #34A853; }
+.quality-fill.ok { background: #FBBC04; }
+.quality-fill.bad { background: #EA4335; }
+.quality-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #999;
+}
+
+/* 加载中 */
+.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 0;
+}
+.loading-hint {
+  font-size: 14px;
+  color: #999;
+  margin-top: 16px;
+}
+
+/* 状态指示器 */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.status-dot.green { background: #34A853; }
+.status-dot.yellow { background: #FBBC04; }
+.status-dot.red { background: #EA4335; }
+.status-shape { font-size: 10px; margin-left: 2px; }

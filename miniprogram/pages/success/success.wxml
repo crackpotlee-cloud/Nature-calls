@@ -1,0 +1,11 @@
+<!-- pages/success/success.wxml - 反馈成功页 -->
+<view class="page-container">
+
+  <view class="success-content">
+    <text class="success-emoji">🤝</text>
+    <text class="success-title">你帮了下一个急的人</text>
+    <text class="success-desc">你的反馈已更新厕所状态\n下一个人会看到更准确的信息</text>
+    <button class="btn-primary" bindtap="onDone">完成</button>
+  </view>
+
+</view>

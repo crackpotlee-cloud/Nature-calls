@@ -1,0 +1,130 @@
+<!-- pages/detail/detail.wxml - 厕所详情页 -->
+<view class="page-container">
+
+  <!-- 头部 -->
+  <view class="detail-header">
+    <text class="detail-back" bindtap="onBack">←</text>
+    <text class="detail-title">厕所详情</text>
+  </view>
+
+  <!-- 滚动内容 -->
+  <scroll-view scroll-y class="detail-scroll" wx:if="{{toilet}}">
+    <view class="detail-content">
+
+      <!-- 基本信息 -->
+      <view class="card">
+        <text class="card-title">📍 {{toilet.name}}</text>
+        <view class="detail-row">
+          <text class="row-key">状态</text>
+          <view class="row-val">
+            <view class="status-indicator">
+              <view class="status-dot {{toilet.status.color}}"></view>
+              <text class="status-shape">{{statusShape}}</text>
+              <text>{{statusLabel}} · {{toilet.status.confidence}}%</text>
+            </view>
+          </view>
+        </view>
+        <view class="detail-row">
+          <text class="row-key">步行时间</text>
+          <text class="row-val">{{walkTimeText}}</text>
+        </view>
+        <view class="detail-row">
+          <text class="row-key">准入条件</text>
+          <text class="row-val">{{accessLabel}}</text>
+        </view>
+        <view class="detail-row">
+          <text class="row-key">运营时间</text>
+          <text class="row-val">{{operationText}}</text>
+        </view>
+        <view class="detail-row">
+          <text class="row-key">状态更新</text>
+          <text class="row-val">{{updateTime}}</text>
+        </view>
+      </view>
+
+      <!-- 怎么找门 -->
+      <view class="card">
+        <text class="card-title">🧭 怎么找门</text>
+        <view class="detail-row">
+          <text class="row-key">锚点</text>
+          <text class="row-val">{{toilet.landmark || '无'}}（{{toilet.floor || '1F'}}）</text>
+        </view>
+        <view class="detail-row">
+          <text class="row-key">路径指引</text>
+          <text class="row-val row-val-right">{{toilet.direction || '暂无指引'}}</text>
+        </view>
+      </view>
+
+      <!-- 质量画像 -->
+      <view class="card">
+        <text class="card-title">📊 质量画像（最近反馈）</text>
+        
+        <!-- 清洁度 -->
+        <view class="quality-item">
+          <text class="quality-label">清洁度</text>
+          <view class="quality-bar">
+            <view class="quality-fill good" style="width: {{stats.cleanlinessGoodPercent}}%"></view>
+            <view class="quality-fill ok" style="width: {{stats.cleanlinessOkPercent}}%"></view>
+            <view class="quality-fill bad" style="width: {{stats.cleanlinessBadPercent}}%"></view>
+          </view>
+          <view class="quality-legend">
+            <text>愿意多待 {{stats.cleanlinessGoodPercent}}%</text>
+            <text>能用 {{stats.cleanlinessOkPercent}}%</text>
+            <text>不太行 {{stats.cleanlinessBadPercent}}%</text>
+          </view>
+        </view>
+
+        <!-- 排队 -->
+        <view class="quality-item">
+          <text class="quality-label">排队情况</text>
+          <view class="quality-bar">
+            <view class="quality-fill good" style="width: {{stats.queueEmptyPercent}}%"></view>
+            <view class="quality-fill ok" style="width: {{stats.queueFewPercent}}%"></view>
+            <view class="quality-fill bad" style="width: {{stats.queueLongPercent}}%"></view>
+          </view>
+          <view class="quality-legend">
+            <text>没人 {{stats.queueEmptyPercent}}%</text>
+            <text>1-2人 {{stats.queueFewPercent}}%</text>
+            <text>排长队 {{stats.queueLongPercent}}%</text>
+          </view>
+        </view>
+
+        <!-- 纸巾 -->
+        <view class="quality-item">
+          <text class="quality-label">纸巾供应</text>
+          <view class="quality-bar">
+            <view class="quality-fill good" style="width: {{stats.paperYesPercent}}%"></view>
+            <view class="quality-fill ok" style="width: {{stats.paperLowPercent}}%"></view>
+            <view class="quality-fill bad" style="width: {{stats.paperNoPercent}}%"></view>
+          </view>
+          <view class="quality-legend">
+            <text>有 {{stats.paperYesPercent}}%</text>
+            <text>快没了 {{stats.paperLowPercent}}%</text>
+            <text>没有 {{stats.paperNoPercent}}%</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 设施清单 -->
+      <view class="card">
+        <text class="card-title">🏠 设施</text>
+        <view wx:for="{{facilityList}}" wx:key="name" class="detail-row">
+          <text class="row-key">{{item.icon}} {{item.name}}</text>
+          <text class="row-val">✅ 有</text>
+        </view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <button class="btn-primary" bindtap="onStartNav">去这里 →</button>
+      <button class="btn-outline mt-12" bindtap="onShare">分享给朋友</button>
+
+    </view>
+  </scroll-view>
+
+  <!-- 加载状态 -->
+  <view class="loading-center" wx:if="{{!toilet}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-hint">加载中...</text>
+  </view>
+
+</view>

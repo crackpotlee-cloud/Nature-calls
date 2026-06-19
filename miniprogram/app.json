@@ -1,0 +1,27 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/result/result",
+    "pages/nav/nav",
+    "pages/feedback/feedback",
+    "pages/detail/detail",
+    "pages/contribute/contribute",
+    "pages/share/share",
+    "pages/success/success"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "backgroundTextStyle": "dark",
+    "backgroundColor": "#f5f5f5"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "需要获取你的位置来查找附近的厕所"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation",
+    "chooseLocation"
+  ],
+  "sitemapLocation": "sitemap.json"
+}

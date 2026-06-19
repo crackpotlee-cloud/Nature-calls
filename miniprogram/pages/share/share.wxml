@@ -1,0 +1,70 @@
+<!-- pages/share/share.wxml - 分享落地页 -->
+<view class="page-container">
+
+  <!-- 顶部横幅 -->
+  <view class="share-header">
+    <text class="share-from">朋友用三急分享了一个厕所</text>
+    <text class="share-title">{{toiletName}} · {{statusLabel}} · {{paperLabel}}</text>
+  </view>
+
+  <scroll-view scroll-y class="share-scroll" wx:if="{{toilet}}">
+    <view class="detail-content">
+
+      <!-- 厕所状态 -->
+      <view class="card">
+        <text class="card-title">📍 厕所状态</text>
+        <view class="detail-row">
+          <text class="row-key">状态</text>
+          <view class="row-val">
+            <view class="status-indicator">
+              <view class="status-dot {{toilet.status.color}}"></view>
+              <text class="status-shape">{{statusShape}}</text>
+              <text>{{statusLabel}} · {{toilet.status.confidence}}%</text>
+            </view>
+          </view>
+        </view>
+        <view class="detail-row">
+          <text class="row-key">准入</text>
+          <text class="row-val">{{accessLabel}}</text>
+        </view>
+        <view class="detail-row">
+          <text class="row-key">质量</text>
+          <text class="row-val">{{qualitySummary}}</text>
+        </view>
+      </view>
+
+      <!-- 怎么找门 -->
+      <view class="card">
+        <text class="card-title">🧭 怎么找门</text>
+        <view class="detail-row">
+          <text class="row-key">路径</text>
+          <text class="row-val row-val-right">{{toilet.direction || '暂无指引'}}</text>
+        </view>
+      </view>
+
+      <!-- 开始导航 -->
+      <button class="btn-primary" bindtap="onStartNav">开始导航 →</button>
+
+      <!-- 确认状态 -->
+      <view class="confirm-section">
+        <text class="confirm-hint">这个厕所还在吗？</text>
+        <view class="confirm-buttons">
+          <view class="opt-btn good" bindtap="onConfirmStatus" data-status="{{true}}">
+            <text>✅ 确认能用</text>
+          </view>
+          <view class="opt-btn bad" bindtap="onConfirmStatus" data-status="{{false}}">
+            <text>❌ 确认不行</text>
+          </view>
+        </view>
+      </view>
+
+    </view>
+  </scroll-view>
+
+  <!-- 加载 -->
+  <view class="loading-center" wx:if="{{!toilet}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-hint">加载中...</text>
+  </view>
+
+</view>

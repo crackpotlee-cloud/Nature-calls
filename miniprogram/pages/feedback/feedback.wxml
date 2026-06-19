@@ -1,0 +1,112 @@
+<!-- pages/feedback/feedback.wxml - 反馈Sheet -->
+<view class="page-container">
+
+  <!-- 反馈Sheet -->
+  <view class="feedback-sheet">
+    <view class="sheet-handle"></view>
+    
+    <text class="feedback-title">这个厕所现在怎么样？</text>
+    <text class="feedback-subtitle">3秒选择题，帮下一个急的人</text>
+
+    <!-- Q1: 能用/不能用 -->
+    <view class="feedback-q">
+      <text class="q-label">这个厕所</text>
+      <view class="q-options">
+        <view 
+          class="opt-btn good {{answers.status === 'available' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="status" data-value="available"
+        >
+          <text>✅ 能用</text>
+        </view>
+        <view 
+          class="opt-btn bad {{answers.status === 'unavailable' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="status" data-value="unavailable"
+        >
+          <text>❌ 不行</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Q2: 干净程度 -->
+    <view class="feedback-q">
+      <text class="q-label">干净程度</text>
+      <view class="q-options three-col">
+        <view 
+          class="opt-btn {{answers.cleanliness === 'good' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="cleanliness" data-value="good"
+        >
+          <text>愿意多待</text>
+        </view>
+        <view 
+          class="opt-btn {{answers.cleanliness === 'ok' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="cleanliness" data-value="ok"
+        >
+          <text>能用</text>
+        </view>
+        <view 
+          class="opt-btn {{answers.cleanliness === 'bad' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="cleanliness" data-value="bad"
+        >
+          <text>不太行</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Q3: 排队 -->
+    <view class="feedback-q">
+      <text class="q-label">排队情况</text>
+      <view class="q-options three-col">
+        <view 
+          class="opt-btn {{answers.queue === 'empty' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="queue" data-value="empty"
+        >
+          <text>没人</text>
+        </view>
+        <view 
+          class="opt-btn {{answers.queue === 'few' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="queue" data-value="few"
+        >
+          <text>1-2人</text>
+        </view>
+        <view 
+          class="opt-btn {{answers.queue === 'long' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="queue" data-value="long"
+        >
+          <text>排长队</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Q4: 有纸 -->
+    <view class="feedback-q">
+      <text class="q-label">有纸吗</text>
+      <view class="q-options three-col">
+        <view 
+          class="opt-btn {{answers.paper === 'yes' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="paper" data-value="yes"
+        >
+          <text>有</text>
+        </view>
+        <view 
+          class="opt-btn {{answers.paper === 'low' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="paper" data-value="low"
+        >
+          <text>快没了</text>
+        </view>
+        <view 
+          class="opt-btn {{answers.paper === 'no' ? 'selected' : ''}}" 
+          bindtap="onSelect" data-field="paper" data-value="no"
+        >
+          <text>没有</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <button class="feedback-submit" bindtap="onSubmit" disabled="{{!canSubmit}}">提交反馈</button>
+    
+    <!-- 跳过 -->
+    <text class="feedback-skip" bindtap="onSkip">跳过</text>
+  </view>
+
+</view>

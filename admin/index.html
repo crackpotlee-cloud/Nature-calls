@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三急 - 数据审核后台</title>
+<style>
+/* ===== Reset & Variables ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #FF6B35;
+  --primary-light: #FF8A5C;
+  --primary-dark: #E55A2B;
+  --primary-bg: #FFF3EE;
+  --success: #22C55E;
+  --success-bg: #F0FDF4;
+  --danger: #EF4444;
+  --danger-bg: #FEF2F2;
+  --warning: #F59E0B;
+  --warning-bg: #FFFBEB;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+  --white: #FFFFFF;
+  --sidebar-w: 240px;
+  --header-h: 60px;
+  --radius: 8px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --transition: 0.2s ease;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+  font-size: 14px;
+  color: var(--gray-800);
+  background: var(--gray-100);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ===== Login Page ===== */
+.login-overlay {
+  position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.login-card {
+  background: var(--white); border-radius: 16px; padding: 48px 40px;
+  width: 400px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.login-logo { font-size: 48px; margin-bottom: 8px; }
+.login-title { font-size: 24px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
+.login-subtitle { font-size: 14px; color: var(--gray-500); margin-bottom: 32px; }
+.login-field { margin-bottom: 20px; text-align: left; }
+.login-field label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+.login-field input {
+  width: 100%; padding: 10px 14px; border: 1px solid var(--gray-300); border-radius: var(--radius);
+  font-size: 15px; transition: border-color var(--transition); outline: none;
+}
+.login-field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+.login-btn {
+  width: 100%; padding: 12px; background: var(--primary); color: var(--white);
+  border: none; border-radius: var(--radius); font-size: 16px; font-weight: 600;
+  cursor: pointer; transition: background var(--transition);
+}
+.login-btn:hover { background: var(--primary-dark); }
+.login-error { color: var(--danger); font-size: 13px; margin-top: 12px; display: none; }
+.login-error.show { display: block; }
+
+/* ===== App Layout ===== */
+.app-layout { display: none; min-height: 100vh; }
+.app-layout.active { display: flex; }
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: var(--sidebar-w); background: var(--gray-900); color: var(--white);
+  display: flex; flex-direction: column; position: fixed; top: 0; left: 0;
+  bottom: 0; z-index: 100; overflow-y: auto;
+}
+.sidebar-header {
+  padding: 20px 24px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-header .logo { font-size: 28px; }
+.sidebar-header .brand { font-size: 18px; font-weight: 700; }
+.sidebar-nav { flex: 1; padding: 12px 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 12px 24px;
+  color: var(--gray-400); cursor: pointer; transition: all var(--transition);
+  font-size: 14px; border-left: 3px solid transparent;
+}
+.nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+.nav-item.active { color: var(--primary); background: rgba(255,107,53,0.1); border-left-color: var(--primary); }
+.nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+.nav-badge { margin-left: auto; background: var(--primary); color: var(--white); font-size: 11px;
+  padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+
+.sidebar-footer {
+  padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; flex-shrink: 0;
+}
+.user-info { font-size: 13px; }
+.user-name { font-weight: 600; color: var(--white); }
+.user-role { color: var(--gray-400); font-size: 11px; }
+.logout-btn { margin-left: auto; background: none; border: none; color: var(--gray-400); cursor: pointer;
+  font-size: 18px; padding: 4px; transition: color var(--transition); }
+.logout-btn:hover { color: var(--danger); }
+
+/* ===== Main Content ===== */
+.main-content { flex: 1; margin-left: var(--sidebar-w); min-height: 100vh; }
+.page-header {
+  height: var(--header-h); background: var(--white); border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; padding: 0 32px; position: sticky; top: 0; z-index: 50;
+}
+.page-header h1 { font-size: 20px; font-weight: 700; color: var(--gray-900); }
+.page-body { padding: 24px 32px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ===== Stats Cards ===== */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--white); border-radius: var(--radius); padding: 20px 24px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);
+  display: flex; align-items: center; gap: 16px;
+}
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;
+}
+.stat-icon.primary { background: var(--primary-bg); color: var(--primary); }
+.stat-icon.success { background: var(--success-bg); color: var(--success); }
+.stat-icon.warning { background: var(--warning-bg); color: var(--warning); }
+.stat-icon.danger { background: var(--danger-bg); color: var(--danger); }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--gray-900); line-height: 1.2; }
+.stat-label { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+.stat-change { font-size: 12px; margin-top: 2px; }
+.stat-change.up { color: var(--success); }
+.stat-change.down { color: var(--danger); }
+
+/* ===== Tables ===== */
+.section-title { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 16px; }
+.card {
+  background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200); margin-bottom: 24px; overflow: hidden;
+}
+.card-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+.card-body { padding: 0; }
+.card-body.padded { padding: 20px; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600;
+  color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px;
+  background: var(--gray-50); border-bottom: 1px solid var(--gray-200); white-space: nowrap;
+}
+td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); font-size: 14px; }
+tr:last-child td { border-bottom: none; }
+tr:hover { background: var(--gray-50); }
+tr.row-clickable { cursor: pointer; }
+
+/* ===== Badges ===== */
+.badge {
+  display: inline-block; padding: 2px 10px; border-radius: 12px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.badge-green { background: var(--success-bg); color: #15803D; }
+.badge-yellow { background: var(--warning-bg); color: #92400E; }
+.badge-red { background: var(--danger-bg); color: #991B1B; }
+.badge-primary { background: var(--primary-bg); color: var(--primary-dark); }
+.badge-gray { background: var(--gray-100); color: var(--gray-600); }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 4px; padding: 7px 16px;
+  border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1px solid transparent; transition: all var(--transition); white-space: nowrap;
+}
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-primary { background: var(--primary); color: var(--white); border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-success { background: var(--success); color: var(--white); }
+.btn-success:hover { background: #16A34A; }
+.btn-danger { background: var(--danger); color: var(--white); }
+.btn-danger:hover { background: #DC2626; }
+.btn-outline { background: var(--white); color: var(--gray-700); border-color: var(--gray-300); }
+.btn-outline:hover { background: var(--gray-50); border-color: var(--gray-400); }
+.btn-ghost { background: transparent; color: var(--gray-600); border-color: transparent; }
+.btn-ghost:hover { background: var(--gray-100); }
+
+/* ===== Detail Panel ===== */
+.detail-panel { display: none; background: var(--gray-50); border-top: 2px solid var(--primary); }
+.detail-panel.open { display: block; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+.detail-section { }
+.detail-section h4 { font-size: 13px; font-weight: 700; color: var(--gray-500); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 10px; }
+.detail-item { display: flex; margin-bottom: 6px; font-size: 13px; }
+.detail-key { color: var(--gray-500); width: 80px; flex-shrink: 0; }
+.detail-val { color: var(--gray-800); font-weight: 500; }
+.detail-map {
+  height: 200px; background: var(--gray-200); border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gray-500); font-size: 13px; margin-top: 8px;
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--white); border-radius: 12px; width: 440px; max-width: 90vw;
+  max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-header {
+  padding: 20px 24px; border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h3 { font-size: 17px; font-weight: 700; }
+.modal-close {
+  background: none; border: none; font-size: 22px; color: var(--gray-400);
+  cursor: pointer; padding: 4px; line-height: 1;
+}
+.modal-close:hover { color: var(--gray-700); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 10px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+.form-group textarea, .form-group select, .form-group input {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--gray-300);
+  border-radius: 6px; font-size: 14px; font-family: inherit; outline: none;
+  transition: border-color var(--transition);
+}
+.form-group textarea { min-height: 80px; resize: vertical; }
+.form-group textarea:focus, .form-group select:focus, .form-group input:focus {
+  border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg);
+}
+
+/* ===== Search ===== */
+.search-box {
+  display: flex; align-items: center; gap: 8px; padding: 4px 12px;
+  border: 1px solid var(--gray-300); border-radius: 6px; background: var(--white);
+  transition: border-color var(--transition); width: 260px;
+}
+.search-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+.search-box input {
+  border: none; outline: none; font-size: 14px; flex: 1; padding: 6px 0;
+  background: transparent;
+}
+.search-icon { color: var(--gray-400); font-size: 16px; }
+
+/* ===== Toast ===== */
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+  box-shadow: var(--shadow-md); animation: slideIn 0.3s ease;
+  max-width: 360px;
+}
+.toast-success { background: var(--success-bg); color: #15803D; border: 1px solid #BBF7D0; }
+.toast-error { background: var(--danger-bg); color: #991B1B; border: 1px solid #FECACA; }
+.toast-info { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ===== Utility ===== */
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-gap { display: flex; align-items: center; gap: 8px; }
+.text-muted { color: var(--gray-500); font-size: 13px; }
+.text-sm { font-size: 13px; }
+.mt-4 { margin-top: 16px; }
+.empty-state { text-align: center; padding: 40px; color: var(--gray-400); }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.status-dot.green { background: var(--success); }
+.status-dot.yellow { background: var(--warning); }
+.status-dot.red { background: var(--danger); }
+.status-dot.gray { background: var(--gray-400); }
+.actions-cell { display: flex; gap: 6px; }
+.locked-tag { display: inline-flex; align-items: center; gap: 2px; font-size: 12px; color: var(--warning); margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ===== Login Overlay ===== -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-logo">🚽</div>
+    <div class="login-title">三急数据审核后台</div>
+    <div class="login-subtitle">仅限 L3+ 管理员访问</div>
+    <div class="login-field">
+      <label>管理员ID</label>
+      <input type="text" id="adminIdInput" placeholder="输入管理员ID（如 admin_l3）" autocomplete="off">
+    </div>
+    <button class="login-btn" onclick="doLogin()">登 录</button>
+    <div class="login-error" id="loginError">该ID无管理员权限（需要L3或以上角色）</div>
+  </div>
+</div>
+
+<!-- ===== App Layout ===== -->
+<div class="app-layout" id="appLayout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="logo">🚽</span>
+      <span class="brand">三急管理</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="review" onclick="switchPage('review')">
+        <span class="nav-icon">📋</span> 审核队列
+        <span class="nav-badge" id="pendingBadge">20</span>
+      </div>
+      <div class="nav-item" data-page="dashboard" onclick="switchPage('dashboard')">
+        <span class="nav-icon">📊</span> 数据看板
+      </div>
+      <div class="nav-item" data-page="manage" onclick="switchPage('manage')">
+        <span class="nav-icon">🗂️</span> 厕所管理
+      </div>
+      <div class="nav-item" data-page="import" onclick="switchPage('import')">
+        <span class="nav-icon">📥</span> 批量导入
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">管理员</div>
+        <div class="user-role" id="userRole">L3</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="退出登录">⏻</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    <!-- ===== Review Page ===== -->
+    <div class="page active" id="page-review">
+      <div class="page-header">
+        <h1>审核队列</h1>
+      </div>
+      <div class="page-body">
+        <div class="card">
+          <div class="card-header flex-between">
+            <span class="card-title">待审核厕所（<span id="pendingCount">20</span>条）</span>
+            <div class="flex-gap">
+              <select id="reviewFilter" style="padding:6px 10px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;outline:none;" onchange="filterReview()">
+                <option value="all">全部类型</option>
+                <option value="公厕">公厕</option>
+                <option value="商场厕所">商场厕所</option>
+                <option value="地铁厕所">地铁厕所</option>
+                <option value="餐饮厕所">餐饮厕所</option>
+                <option value="公园厕所">公园厕所</option>
+                <option value="加油站厕所">加油站厕所</option>
+                <option value="酒店厕所">酒店厕所</option>
+                <option value="医院厕所">医院厕所</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:40px;"></th>
+                    <th>名称</th>
+                    <th>类型</th>
+                    <th>提交者</th>
+                    <th>提交时间</th>
+                    <th>锚点</th>
+                    <th>准入类型</th>
+                    <th style="width:160px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="reviewTableBody"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="reviewEmpty" style="display:none;">
+              <div class="icon">🎉</div>
+              <p>暂无待审核厕所</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Dashboard Page ===== -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header">
+        <h1>数据看板</h1>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon primary">🚽</div>
+            <div>
+              <div class="stat-value" id="statNewToilets">12</div>
+              <div class="stat-label">今日新增厕所数</div>
+              <div class="stat-change up">↑ 8% 较昨日</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon success">💬</div>
+            <div>
+              <div class="stat-value" id="statFeedbacks">156</div>
+              <div class="stat-label">今日反馈数</div>
+              <div class="stat-change up">↑ 12% 较昨日</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon warning">👥</div>
+            <div>
+              <div class="stat-value" id="statActiveUsers">89</div>
+              <div class="stat-label">活跃用户数</div>
+              <div class="stat-change up">↑ 5% 较昨日</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon danger">⚠️</div>
+            <div>
+              <div class="stat-value" id="statAbnormal">3</div>
+              <div class="stat-label">异常厕所数</div>
+              <div class="stat-change down">↓ 2 较昨日</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">最近审核记录</span>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>厕所名称</th>
+                    <th>审核人</th>
+                    <th>结果</th>
+                    <th>审核时间</th>
+                    <th>备注</th>
+                  </tr>
+                </thead>
+                <tbody id="recentAuditBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Manage Page ===== -->
+    <div class="page" id="page-manage">
+      <div class="page-header">
+        <h1>厕所管理</h1>
+      </div>
+      <div class="page-body">
+        <div class="card">
+          <div class="card-header flex-between">
+            <span class="card-title">已上线厕所（<span id="onlineCount">0</span>条）</span>
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="manageSearch" placeholder="搜索厕所名称..." oninput="filterManage()">
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>名称</th>
+                    <th>类型</th>
+                    <th>区域</th>
+                    <th>状态</th>
+                    <th>锁定状态</th>
+                    <th>审核时间</th>
+                    <th style="width:180px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="manageTableBody"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="manageEmpty" style="display:none;">
+              <div class="icon">📭</div>
+              <p>暂无已上线厕所</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ===== Import Page ===== -->
+    <div class="page" id="page-import">
+      <div class="page-header">
+        <h1>批量导入</h1>
+      </div>
+      <div class="page-body">
+        <!-- 导入区域 -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">导入厕所数据</span>
+            <div class="flex-gap">
+              <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">📄 下载模板</button>
+            </div>
+          </div>
+          <div class="card-body padded">
+            <div style="margin-bottom:16px;">
+              <p style="color:var(--gray-600);font-size:13px;margin-bottom:8px;">
+                支持上传 <strong>JSON</strong> (.json) 或 <strong>CSV</strong> (.csv) 格式文件。
+                每条记录需包含：name, type, lat, lng, entry_lat, entry_lng, landmark, floor, direction, access_type, facilities, operation。
+              </p>
+            </div>
+            <div id="importDropZone" style="border:2px dashed var(--gray-300);border-radius:12px;padding:48px 24px;text-align:center;cursor:pointer;transition:all var(--transition);background:var(--gray-50);">
+              <div style="font-size:48px;margin-bottom:12px;">📁</div>
+              <div style="font-size:15px;font-weight:600;color:var(--gray-700);margin-bottom:4px;">点击上传或拖拽文件到此处</div>
+              <div style="font-size:13px;color:var(--gray-500);">支持 .json / .csv 格式，单次最多 200 条</div>
+              <input type="file" id="importFileInput" accept=".json,.csv" style="display:none;" onchange="handleImportFile(event)">
+            </div>
+
+            <!-- 导入预览 -->
+            <div id="importPreview" style="display:none;margin-top:20px;">
+              <div class="flex-between" style="margin-bottom:12px;">
+                <span style="font-weight:600;color:var(--gray-900);">数据预览</span>
+                <span style="font-size:13px;color:var(--gray-500);">共 <strong id="importTotalCount">0</strong> 条，<span style="color:var(--success);">有效 <strong id="importValidCount">0</strong></span>，<span style="color:var(--danger);">无效 <strong id="importInvalidCount">0</strong></span></span>
+              </div>
+              <div class="table-wrap" style="max-height:360px;overflow-y:auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>名称</th>
+                      <th>类型</th>
+                      <th>准入类型</th>
+                      <th>坐标</th>
+                      <th>设施</th>
+                      <th>校验结果</th>
+                    </tr>
+                  </thead>
+                  <tbody id="importPreviewBody"></tbody>
+                </table>
+              </div>
+              <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:10px;">
+                <button class="btn btn-outline" onclick="cancelImport()">取消</button>
+                <button class="btn btn-primary" id="importConfirmBtn" onclick="confirmImport()">
+                  确认导入（<span id="importBtnCount">0</span>条）
+                </button>
+              </div>
+            </div>
+
+            <!-- 导入结果 -->
+            <div id="importResult" style="display:none;margin-top:20px;"></div>
+          </div>
+        </div>
+
+        <!-- 最近导入记录 -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">最近导入记录</span>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>文件名</th>
+                    <th>操作人</th>
+                    <th>导入时间</th>
+                    <th>总数</th>
+                    <th>成功</th>
+                    <th>失败</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody id="importHistoryBody"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="importHistoryEmpty" style="display:none;">
+              <div class="icon">📭</div>
+              <p>暂无导入记录</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- ===== Reject Modal ===== -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>驳回审核</h3>
+      <button class="modal-close" onclick="closeRejectModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>驳回原因 <span style="color:var(--danger);">*</span></label>
+        <textarea id="rejectReason" placeholder="请填写驳回原因..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeRejectModal()">取消</button>
+      <button class="btn btn-danger" onclick="confirmReject()">确认驳回</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Edit Modal ===== -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>编辑厕所信息</h3>
+      <button class="modal-close" onclick="closeEditModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="editModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEditModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmEdit()">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== 管理员认证配置 =====
+// ⚠️ 安全警告：当前为开发/Mock 模式，凭据仅用于本地测试。
+// 生产环境必须将认证逻辑移至后端 API，前端不应存储任何管理员凭据。
+// 生产环境示例：
+//   1. 移除 mockUsers
+//   2. doLogin() 改为调用 POST /api/admin/auth 后端接口
+//   3. 后端返回 JWT token 后存入 sessionStorage
+//   4. 每次 API 请求携带 token 由后端验证
+
+// 从环境变量模拟中读取（开发环境用默认值，生产环境需后端鉴权）
+// 在真实部署中，以下配置应来自环境变量或后端 API
+const ADMIN_CONFIG = (function() {
+  // 尝试从 URL 参数或 localStorage 读取（仅用于本地开发调试）
+  // 生产环境这些值不应存在
+  try {
+    const stored = localStorage.getItem('sanji_admin_config_dev');
+    if (stored) return JSON.parse(stored);
+  } catch(e) {}
+  return {
+    // 开发环境默认凭据 — 生产环境务必移除
+    admins: {
+      'admin_l3': { name: '张管理', role: 'L3', avatar: '张' },
+      'admin_l4': { name: '李核心', role: 'L4', avatar: '李' },
+    }
+  };
+})();
+
+// 非管理员用户（L2及以下），仅用于展示角色权限验证逻辑
+const mockUsers = {
+  ...ADMIN_CONFIG.admins,
+  'user_l2': { name: '王活跃', role: 'L2', avatar: '王' },
+  'user_l1': { name: '赵普通', role: 'L1', avatar: '赵' },
+};
+
+const toiletTypes = ['公厕','商场厕所','地铁厕所','餐饮厕所','公园厕所','加油站厕所','酒店厕所','医院厕所'];
+const accessTypes = ['自由进入','需安检','建议消费','必须消费','需门禁','需密码','需登记'];
+const operatingTypes = ['24小时','跟随商场','固定时间'];
+const districts = ['春熙路','太古里','IFS','天府广场','宽窄巷子','火车东站','锦里','建设路'];
+const statusColors = ['green','green','green','yellow','yellow','red'];
+
+function randomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randomDate(daysBack) {
+  const d = new Date();
+  d.setDate(d.getDate() - Math.floor(Math.random() * daysBack));
+  d.setHours(randomInt(6,23), randomInt(0,59), 0, 0);
+  return d.toISOString();
+}
+
+// Generate 20 pending toilets
+const pendingToilets = [];
+const landmarks = ['海底捞','星巴克','麦当劳','肯德基','优衣库','ZARA','Apple Store','喜茶','奈雪','711便利店','全家','瑞幸咖啡','盒马鲜生','西西弗书店','乐高','泡泡玛特','URBAN REVIVO','完美日记','好利来','名创优品'];
+const directions = [
+  '进入后沿主通道直行约30米，右侧即到',
+  '从正门进入左转，直行50米后右侧',
+  '乘坐电梯至本层，出电梯右转即到',
+  '沿走廊直行至尽头，左手边',
+  '美食广场旁通道进入，直行20米',
+];
+
+for (let i = 0; i < 20; i++) {
+  const lat = 30.65 + (Math.random() * 0.04 - 0.02);
+  const lng = 104.07 + (Math.random() * 0.04 - 0.02);
+  pendingToilets.push({
+    id: `pending_${String(i+1).padStart(3,'0')}`,
+    name: `${randomItem(districts)} ${randomItem(landmarks)}旁`,
+    type: randomItem(toiletTypes),
+    submitter: `user_${randomInt(100,999)}`,
+    submitterRole: 'L' + randomInt(1,3),
+    submittedAt: randomDate(7),
+    landmark: randomItem(landmarks),
+    floor: `${randomInt(1,8)}F`,
+    direction: randomItem(directions),
+    accessType: randomItem(accessTypes),
+    lat, lng,
+    entryLat: lat + 0.0005,
+    entryLng: lng + 0.0005,
+    facilities: {
+      baby_station: Math.random() > 0.5,
+      accessible: Math.random() > 0.5,
+      paper: Math.random() > 0.3,
+      soap: Math.random() > 0.4,
+      hand_dryer: Math.random() > 0.4,
+      squat: Math.random() > 0.2,
+      seat: Math.random() > 0.3
+    },
+    operation: {
+      type: randomItem(operatingTypes),
+      open_time: '09:00:00',
+      close_time: '22:00:00',
+      is_operating: true
+    },
+    status: {
+      color: randomItem(statusColors),
+      confidence: randomInt(50, 100),
+      updated_at: randomDate(1)
+    },
+    district: randomItem(districts),
+  });
+}
+
+// Generate approved toilets (for manage page)
+const approvedToilets = [];
+for (let i = 0; i < 35; i++) {
+  const lat = 30.65 + (Math.random() * 0.04 - 0.02);
+  const lng = 104.07 + (Math.random() * 0.04 - 0.02);
+  approvedToilets.push({
+    id: `toilet_${String(i+1).padStart(3,'0')}`,
+    name: `${randomItem(districts)} ${randomItem(landmarks)}旁`,
+    type: randomItem(toiletTypes),
+    district: randomItem(districts),
+    status: {
+      color: randomItem(statusColors),
+      confidence: randomInt(50, 100),
+      updated_at: randomDate(1)
+    },
+    locked: i < 4, // first 4 are locked
+    lockedBy: i < 4 ? (i < 2 ? 'admin_l3' : 'admin_l4') : null,
+    lockedAt: i < 4 ? randomDate(30) : null,
+    approvedAt: randomDate(90),
+    approvedBy: Math.random() > 0.5 ? 'admin_l3' : 'admin_l4',
+    lat, lng,
+    entryLat: lat + 0.0005,
+    entryLng: lng + 0.0005,
+    accessType: randomItem(accessTypes),
+    facilities: {
+      baby_station: Math.random() > 0.5,
+      accessible: Math.random() > 0.5,
+      paper: Math.random() > 0.3,
+      soap: Math.random() > 0.4,
+      hand_dryer: Math.random() > 0.4,
+      squat: Math.random() > 0.2,
+      seat: Math.random() > 0.3
+    },
+    operation: {
+      type: randomItem(operatingTypes),
+      open_time: '09:00:00',
+      close_time: '22:00:00',
+      is_operating: true
+    },
+    floor: `${randomInt(1,8)}F`,
+    landmark: randomItem(landmarks),
+    direction: randomItem(directions),
+  });
+}
+
+// Recent audit records
+const recentAudits = [];
+for (let i = 0; i < 15; i++) {
+  const isApproved = Math.random() > 0.25;
+  recentAudits.push({
+    id: `audit_${i+1}`,
+    toiletName: `${randomItem(districts)} ${randomItem(landmarks)}旁`,
+    auditor: Math.random() > 0.5 ? 'admin_l3' : 'admin_l4',
+    auditorName: Math.random() > 0.5 ? '张管理' : '李核心',
+    result: isApproved ? 'approved' : 'rejected',
+    reason: isApproved ? '' : ['信息不完整','位置不准确','重复提交','照片模糊','类型分类错误'][randomInt(0,4)],
+    time: randomDate(3),
+  });
+}
+recentAudits.sort((a,b) => new Date(b.time) - new Date(a.time));
+
+// ===== State =====
+let currentUser = null;
+let currentPage = 'review';
+let rejectingId = null;
+let editingId = null;
+
+// 登录频率限制
+const loginAttempts = {
+  count: 0,
+  lockUntil: null,
+  maxAttempts: 5,
+  cooldownMinutes: 5
+};
+
+// ===== Login =====
+function doLogin() {
+  const id = document.getElementById('adminIdInput').value.trim();
+  const err = document.getElementById('loginError');
+
+  // 频率限制检查
+  const now = Date.now();
+  if (loginAttempts.lockUntil && now < loginAttempts.lockUntil) {
+    const remainingMin = Math.ceil((loginAttempts.lockUntil - now) / 60000);
+    err.textContent = `登录尝试次数过多，请${remainingMin}分钟后再试`;
+    err.classList.add('show');
+    return;
+  }
+
+  if (!id) { err.textContent = '请输入管理员ID'; err.classList.add('show'); return; }
+
+  // ⚠️ 生产环境：此处应调用 POST /api/admin/auth 后端验证
+  // 当前为开发/Mock 模式，使用本地配置验证
+  const user = mockUsers[id];
+  if (!user || (user.role !== 'L3' && user.role !== 'L4')) {
+    loginAttempts.count++;
+    if (loginAttempts.count >= loginAttempts.maxAttempts) {
+      loginAttempts.lockUntil = now + loginAttempts.cooldownMinutes * 60000;
+      err.textContent = `登录尝试次数过多，请${loginAttempts.cooldownMinutes}分钟后再试`;
+    } else {
+      err.textContent = '该ID无管理员权限（需要L3或以上角色）';
+    }
+    err.classList.add('show');
+    return;
+  }
+
+  // 登录成功，重置尝试计数
+  loginAttempts.count = 0;
+  loginAttempts.lockUntil = null;
+  err.classList.remove('show');
+  currentUser = { id, ...user };
+  document.getElementById('userAvatar').textContent = user.avatar;
+  document.getElementById('userName').textContent = user.name;
+  document.getElementById('userRole').textContent = user.role;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appLayout').classList.add('active');
+  renderAll();
+}
+
+document.getElementById('adminIdInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appLayout').classList.remove('active');
+  document.getElementById('adminIdInput').value = '';
+}
+
+// ===== Page Switch =====
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'manage') renderManage();
+  if (page === 'import') renderImportHistory();
+}
+
+// ===== Toast =====
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => { toast.remove(); }, 3000);
+}
+
+// ===== Review Page =====
+function filterReview() {
+  renderReviewTable();
+}
+
+function renderReviewTable() {
+  const filter = document.getElementById('reviewFilter').value;
+  const filtered = filter === 'all' ? pendingToilets : pendingToilets.filter(t => t.type === filter);
+  const tbody = document.getElementById('reviewTableBody');
+  const empty = document.getElementById('reviewEmpty');
+  document.getElementById('pendingCount').textContent = filtered.length;
+  document.getElementById('pendingBadge').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filtered.map((t, idx) => `
+    <tr class="row-clickable" onclick="toggleDetail('${t.id}', this)" data-id="${t.id}">
+      <td><span style="color:var(--gray-400);">${idx + 1}</span></td>
+      <td><strong>${escHtml(t.name)}</strong></td>
+      <td><span class="badge badge-primary">${t.type}</span></td>
+      <td>${escHtml(t.submitter)} <span class="text-muted">(${t.submitterRole})</span></td>
+      <td>${formatTime(t.submittedAt)}</td>
+      <td>${escHtml(t.landmark)} · ${t.floor}</td>
+      <td><span class="badge badge-gray">${t.accessType}</span></td>
+      <td class="actions-cell" onclick="event.stopPropagation()">
+        <button class="btn btn-sm btn-success" onclick="approveReview('${t.id}')">通过</button>
+        <button class="btn btn-sm btn-danger" onclick="openRejectModal('${t.id}')">驳回</button>
+      </td>
+    </tr>
+    <tr class="detail-panel" id="detail-${t.id}">
+      <td colspan="8">
+        <div class="detail-grid">
+          <div class="detail-section">
+            <h4>基本信息</h4>
+            <div class="detail-item"><span class="detail-key">名称</span><span class="detail-val">${escHtml(t.name)}</span></div>
+            <div class="detail-item"><span class="detail-key">类型</span><span class="detail-val">${t.type}</span></div>
+            <div class="detail-item"><span class="detail-key">楼层</span><span class="detail-val">${t.floor}</span></div>
+            <div class="detail-item"><span class="detail-key">锚点</span><span class="detail-val">${escHtml(t.landmark)}</span></div>
+            <div class="detail-item"><span class="detail-key">引导</span><span class="detail-val">${escHtml(t.direction)}</span></div>
+            <div class="detail-item"><span class="detail-key">区域</span><span class="detail-val">${t.district}</span></div>
+            <div class="detail-item"><span class="detail-key">准入</span><span class="detail-val">${t.accessType}</span></div>
+            <div class="detail-item"><span class="detail-key">运营</span><span class="detail-val">${(t.operation && t.operation.type) || '24小时'} ${(t.operation && t.operation.open_time) || '09:00'}-${(t.operation && t.operation.close_time) || '22:00'}</span></div>
+          </div>
+          <div class="detail-section">
+            <h4>设施信息</h4>
+            <div class="detail-item"><span class="detail-key">母婴台</span><span class="detail-val">${(t.facilities && t.facilities.baby_station) ? '✅ 有' : '❌ 无'}</span></div>
+            <div class="detail-item"><span class="detail-key">无障碍</span><span class="detail-val">${(t.facilities && t.facilities.accessible) ? '✅ 有' : '❌ 无'}</span></div>
+            <div class="detail-item"><span class="detail-key">纸巾</span><span class="detail-val">${(t.facilities && t.facilities.paper) ? '✅ 有' : '❌ 无'}</span></div>
+            <div class="detail-item"><span class="detail-key">洗手液</span><span class="detail-val">${(t.facilities && t.facilities.soap) ? '✅ 有' : '❌ 无'}</span></div>
+            <div class="detail-item"><span class="detail-key">烘手器</span><span class="detail-val">${(t.facilities && t.facilities.hand_dryer) ? '✅ 有' : '❌ 无'}</span></div>
+            <div class="detail-item"><span class="detail-key">蹲便</span><span class="detail-val">${(t.facilities && t.facilities.squat) ? '✅ 有' : '❌ 无'}</span></div>
+            <div class="detail-item"><span class="detail-key">坐便</span><span class="detail-val">${(t.facilities && t.facilities.seat) ? '✅ 有' : '❌ 无'}</span></div>
+            <div class="detail-item"><span class="detail-key">坐标</span><span class="detail-val">${t.lat.toFixed(6)}, ${t.lng.toFixed(6)}</span></div>
+            <div class="detail-item"><span class="detail-key">入口坐标</span><span class="detail-val">${t.entryLat.toFixed(6)}, ${t.entryLng.toFixed(6)}</span></div>
+          </div>
+        </div>
+        <div style="padding:0 20px 20px;">
+          <h4 style="font-size:13px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">地图位置预览</h4>
+          <div class="detail-map" id="map-${t.id}">
+            📍 ${t.lat.toFixed(6)}, ${t.lng.toFixed(6)}<br>
+            <span style="font-size:12px;">(模拟地图预览 - 实际接入腾讯/高德地图)</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function toggleDetail(id, row) {
+  const panel = document.getElementById(`detail-${id}`);
+  if (panel) {
+    panel.classList.toggle('open');
+  }
+}
+
+function approveReview(id) {
+  if (!confirm(`确认通过这条厕所数据？`)) return;
+  const idx = pendingToilets.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const [item] = pendingToilets.splice(idx, 1);
+  item.approvedAt = new Date().toISOString();
+  item.approvedBy = currentUser.id;
+  item.locked = false;
+  approvedToilets.unshift(item);
+  recentAudits.unshift({
+    id: `audit_${Date.now()}`,
+    toiletName: item.name,
+    auditor: currentUser.id,
+    auditorName: currentUser.name,
+    result: 'approved',
+    reason: '',
+    time: new Date().toISOString(),
+  });
+  renderAll();
+  showToast(`"${item.name}" 已通过审核`);
+}
+
+function openRejectModal(id) {
+  rejectingId = id;
+  document.getElementById('rejectReason').value = '';
+  document.getElementById('rejectModal').classList.add('open');
+}
+
+function closeRejectModal() {
+  rejectingId = null;
+  document.getElementById('rejectModal').classList.remove('open');
+}
+
+function confirmReject() {
+  const reason = document.getElementById('rejectReason').value.trim();
+  if (!reason) { showToast('请填写驳回原因', 'error'); return; }
+  const idx = pendingToilets.findIndex(t => t.id === rejectingId);
+  if (idx === -1) return;
+  const [item] = pendingToilets.splice(idx, 1);
+  recentAudits.unshift({
+    id: `audit_${Date.now()}`,
+    toiletName: item.name,
+    auditor: currentUser.id,
+    auditorName: currentUser.name,
+    result: 'rejected',
+    reason,
+    time: new Date().toISOString(),
+  });
+  closeRejectModal();
+  renderAll();
+  showToast(`"${item.name}" 已驳回`);
+}
+
+// ===== Dashboard =====
+function renderDashboard() {
+  document.getElementById('statNewToilets').textContent = approvedToilets.filter(t => {
+    const d = new Date(t.approvedAt);
+    const today = new Date();
+    return d.toDateString() === today.toDateString();
+  }).length || 12;
+  document.getElementById('statFeedbacks').textContent = randomInt(120, 200);
+  document.getElementById('statActiveUsers').textContent = randomInt(70, 110);
+  document.getElementById('statAbnormal').textContent = randomInt(1, 5);
+
+  const tbody = document.getElementById('recentAuditBody');
+  tbody.innerHTML = recentAudits.slice(0, 15).map(a => `
+    <tr>
+      <td>${escHtml(a.toiletName)}</td>
+      <td>${escHtml(a.auditorName)}</td>
+      <td>${a.result === 'approved'
+        ? '<span class="badge badge-green">通过</span>'
+        : '<span class="badge badge-red">驳回</span>'}</td>
+      <td>${formatTime(a.time)}</td>
+      <td class="text-muted">${escHtml(a.reason || '-')}</td>
+    </tr>
+  `).join('');
+}
+
+// ===== Manage Page =====
+function filterManage() {
+  renderManageTable();
+}
+
+function renderManage() {
+  renderManageTable();
+}
+
+function renderManageTable() {
+  const query = (document.getElementById('manageSearch')?.value || '').toLowerCase();
+  const filtered = approvedToilets.filter(t => t.name.toLowerCase().includes(query));
+  const tbody = document.getElementById('manageTableBody');
+  const empty = document.getElementById('manageEmpty');
+  document.getElementById('onlineCount').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filtered.map(t => `
+    <tr>
+      <td>
+        <strong>${escHtml(t.name)}</strong>
+        ${t.locked ? '<span class="locked-tag">🔒 已锁定</span>' : ''}
+      </td>
+      <td><span class="badge badge-primary">${t.type}</span></td>
+      <td>${t.district}</td>
+      <td>
+        <span class="status-dot ${t.status.color}"></span>
+        ${t.status.color === 'green' ? '空闲' : t.status.color === 'yellow' ? '较忙' : '拥挤'}
+      </td>
+      <td>
+        ${t.locked
+          ? `<span class="badge badge-yellow">锁定 · ${t.lockedBy}</span>`
+          : '<span class="badge badge-green">正常</span>'}
+      </td>
+      <td>${formatTime(t.approvedAt)}</td>
+      <td class="actions-cell">
+        <button class="btn btn-sm btn-outline" onclick="openEditModal('${t.id}')">编辑</button>
+        ${currentUser.role === 'L3' || currentUser.role === 'L4' ? `
+          ${t.locked
+            ? `<button class="btn btn-sm btn-outline" onclick="toggleLock('${t.id}')">解锁</button>`
+            : `<button class="btn btn-sm btn-outline" onclick="toggleLock('${t.id}')">锁定</button>`
+          }
+        ` : ''}
+        <button class="btn btn-sm btn-danger" onclick="offlineToilet('${t.id}')">下线</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function toggleLock(id) {
+  const t = approvedToilets.find(t => t.id === id);
+  if (!t) return;
+  if (t.locked) {
+    t.locked = false;
+    t.lockedBy = null;
+    t.lockedAt = null;
+    showToast(`"${t.name}" 已解锁`);
+  } else {
+    t.locked = true;
+    t.lockedBy = currentUser.id;
+    t.lockedAt = new Date().toISOString();
+    showToast(`"${t.name}" 已锁定，普通用户不可编辑`);
+  }
+  renderManageTable();
+}
+
+function offlineToilet(id) {
+  const t = approvedToilets.find(t => t.id === id);
+  if (!t) return;
+  if (!confirm(`确认下线 "${t.name}"？下线后将从地图中移除。`)) return;
+  const idx = approvedToilets.indexOf(t);
+  approvedToilets.splice(idx, 1);
+  renderAll();
+  showToast(`"${t.name}" 已下线`, 'info');
+}
+
+function openEditModal(id) {
+  editingId = id;
+  const t = approvedToilets.find(t => t.id === id);
+  if (!t) return;
+  document.getElementById('editModalBody').innerHTML = `
+    <div class="form-group">
+      <label>名称</label>
+      <input type="text" id="editName" value="${escHtml(t.name)}">
+    </div>
+    <div class="form-group">
+      <label>类型</label>
+      <select id="editType">
+        ${toiletTypes.map(tt => `<option value="${tt}" ${t.type === tt ? 'selected' : ''}>${tt}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>准入类型</label>
+      <select id="editAccess">
+        ${accessTypes.map(at => `<option value="${at}" ${t.accessType === at ? 'selected' : ''}>${at}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>区域</label>
+      <select id="editDistrict">
+        ${districts.map(d => `<option value="${d}" ${t.district === d ? 'selected' : ''}>${d}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>运营类型</label>
+      <select id="editOperating">
+        ${operatingTypes.map(ot => `<option value="${ot}" ${(t.operation && t.operation.type) === ot ? 'selected' : ''}>${ot}</option>`).join('')}
+      </select>
+    </div>
+  `;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEditModal() {
+  editingId = null;
+  document.getElementById('editModal').classList.remove('open');
+}
+
+function confirmEdit() {
+  const t = approvedToilets.find(t => t.id === editingId);
+  if (!t) return;
+
+  const name = document.getElementById('editName').value.trim();
+  const type = document.getElementById('editType').value;
+  const accessType = document.getElementById('editAccess').value;
+  const district = document.getElementById('editDistrict').value;
+  const operatingType = document.getElementById('editOperating').value;
+
+  // 输入校验
+  if (!name || name.length < 2) { showToast('名称至少需要2个字符', 'error'); return; }
+  if (name.length > 100) { showToast('名称不能超过100个字符', 'error'); return; }
+  if (!toiletTypes.includes(type)) { showToast('请选择有效的厕所类型', 'error'); return; }
+  if (!accessTypes.includes(accessType)) { showToast('请选择有效的准入类型', 'error'); return; }
+  if (!districts.includes(district)) { showToast('请选择有效的区域', 'error'); return; }
+  if (!operatingTypes.includes(operatingType)) { showToast('请选择有效的运营类型', 'error'); return; }
+
+  t.name = name;
+  t.type = type;
+  t.accessType = accessType;
+  t.district = district;
+  if (!t.operation) t.operation = {};
+  t.operation.type = operatingType;
+  closeEditModal();
+  renderAll();
+  showToast(`"${t.name}" 已更新`);
+}
+
+// ===== Import Page =====
+const importHistory = [];  // 导入历史记录
+let importPreviewData = []; // 当前预览数据
+
+// 触发文件选择
+document.addEventListener('DOMContentLoaded', () => {
+  const dropZone = document.getElementById('importDropZone');
+  if (dropZone) {
+    dropZone.addEventListener('click', () => {
+      document.getElementById('importFileInput').click();
+    });
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--primary)'; dropZone.style.background = 'var(--primary-bg)'; });
+    dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--gray-300)'; dropZone.style.background = 'var(--gray-50)'; });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = 'var(--gray-300)';
+      dropZone.style.background = 'var(--gray-50)';
+      const file = e.dataTransfer.files[0];
+      if (file) processImportFile(file);
+    });
+  }
+});
+
+function downloadTemplate() {
+  const template = [
+    {
+      name: '示例厕所名称',
+      type: '商场厕所',
+      lat: 30.658,
+      lng: 104.082,
+      entry_lat: 30.6582,
+      entry_lng: 104.0821,
+      landmark: '海底捞',
+      floor: '3F',
+      direction: '进入后沿主通道直行约30米，右侧即到',
+      access_type: '自由进入',
+      facilities: { baby_station: true, accessible: true, paper: true, soap: true, hand_dryer: true, squat: true, seat: true },
+      operation: { type: '跟随商场', open_time: '10:00:00', close_time: '22:00:00', is_operating: true }
+    }
+  ];
+  const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sanji_import_template.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('模板下载成功');
+}
+
+function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (file) processImportFile(file);
+}
+
+function processImportFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      let data;
+      const content = e.target.result;
+      if (file.name.endsWith('.json')) {
+        data = JSON.parse(content);
+      } else if (file.name.endsWith('.csv')) {
+        data = parseCSV(content);
+      } else {
+        showToast('不支持的文件格式，请上传 .json 或 .csv 文件', 'error');
+        return;
+      }
+      // 确保是数组
+      if (!Array.isArray(data)) {
+        data = [data];
+      }
+      // 限制最多200条
+      if (data.length > 200) {
+        showToast(`单次最多导入200条，当前${data.length}条，已截取前200条`, 'error');
+        data = data.slice(0, 200);
+      }
+      validateImportData(data);
+    } catch (err) {
+      showToast('文件解析失败：' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(content) {
+  const lines = content.split('\n').filter(line => line.trim());
+  if (lines.length < 2) throw new Error('CSV文件至少需要表头和数据行');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    const row = {};
+    headers.forEach((h, idx) => {
+      let val = values[idx];
+      // 尝试解析数字
+      if (val && !isNaN(val) && val !== '') val = parseFloat(val);
+      // 尝试解析布尔
+      if (val === 'true') val = true;
+      if (val === 'false') val = false;
+      row[h] = val;
+    });
+    rows.push(row);
+  }
+  return rows;
+}
+
+const VALID_TOILET_TYPES = ['公厕', '商场厕所', '地铁厕所', '餐饮厕所', '公园厕所', '加油站厕所', '酒店厕所', '医院厕所'];
+const VALID_ACCESS_TYPES = ['自由进入', '需安检', '建议消费', '必须消费', '需门禁', '需密码', '需登记'];
+const VALID_OPERATING_TYPES = ['24小时', '跟随商场', '固定时间'];
+const REQUIRED_FIELDS = ['name', 'type', 'lat', 'lng'];
+
+function validateImportData(data) {
+  importPreviewData = [];
+  let validCount = 0;
+  let invalidCount = 0;
+
+  data.forEach((item, idx) => {
+    const errors = [];
+    // 必填字段检查
+    REQUIRED_FIELDS.forEach(f => {
+      if (!item[f] && item[f] !== 0) errors.push(`缺少必填字段: ${f}`);
+    });
+    // 类型校验
+    if (item.type && !VALID_TOILET_TYPES.includes(item.type)) errors.push(`无效厕所类型: ${item.type}`);
+    if (item.access_type && !VALID_ACCESS_TYPES.includes(item.access_type)) errors.push(`无效准入类型: ${item.access_type}`);
+    if (item.operation && item.operation.type && !VALID_OPERATING_TYPES.includes(item.operation.type)) errors.push(`无效运营类型: ${item.operation.type}`);
+    // 坐标范围校验
+    if (item.lat !== undefined && (item.lat < -90 || item.lat > 90)) errors.push('纬度超出范围(-90~90)');
+    if (item.lng !== undefined && (item.lng < -180 || item.lng > 180)) errors.push('经度超出范围(-180~180)');
+    // 名称长度校验
+    if (item.name && (item.name.length < 2 || item.name.length > 100)) errors.push('名称长度需在2-100字符之间');
+
+    const record = {
+      index: idx + 1,
+      data: item,
+      valid: errors.length === 0,
+      errors
+    };
+    if (record.valid) validCount++; else invalidCount++;
+    importPreviewData.push(record);
+  });
+
+  renderImportPreview(validCount, invalidCount);
+}
+
+function renderImportPreview(validCount, invalidCount) {
+  const preview = document.getElementById('importPreview');
+  const totalCount = importPreviewData.length;
+
+  preview.style.display = 'block';
+  document.getElementById('importTotalCount').textContent = totalCount;
+  document.getElementById('importValidCount').textContent = validCount;
+  document.getElementById('importInvalidCount').textContent = invalidCount;
+  document.getElementById('importBtnCount').textContent = validCount;
+  document.getElementById('importConfirmBtn').disabled = validCount === 0;
+
+  const tbody = document.getElementById('importPreviewBody');
+  tbody.innerHTML = importPreviewData.map(r => `
+    <tr>
+      <td>${r.index}</td>
+      <td><strong>${escHtml(r.data.name || '(无名称)')}</strong></td>
+      <td><span class="badge badge-primary">${r.data.type || '-'}</span></td>
+      <td>${r.data.access_type || '-'}</td>
+      <td style="font-size:12px;color:var(--gray-500);">${r.data.lat?.toFixed(6) || '-'}, ${r.data.lng?.toFixed(6) || '-'}</td>
+      <td style="font-size:12px;">
+        ${r.data.facilities ? Object.entries(r.data.facilities).filter(([k,v]) => v).map(([k]) => k).join(', ') : '-'}
+      </td>
+      <td>
+        ${r.valid
+          ? '<span class="badge badge-green">✅ 有效</span>'
+          : `<span class="badge badge-red">❌ ${r.errors.join('; ')}</span>`}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function cancelImport() {
+  importPreviewData = [];
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('importResult').style.display = 'none';
+  document.getElementById('importFileInput').value = '';
+}
+
+function confirmImport() {
+  const validItems = importPreviewData.filter(r => r.valid);
+  if (validItems.length === 0) {
+    showToast('没有有效数据可导入', 'error');
+    return;
+  }
+
+  // 模拟导入：将有效数据加入审核队列
+  const now = new Date().toISOString();
+  let successCount = 0;
+  validItems.forEach(r => {
+    const item = r.data;
+    pendingToilets.push({
+      id: `pending_imp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      name: item.name,
+      type: item.type,
+      submitter: currentUser.id,
+      submitterRole: currentUser.role,
+      submittedAt: now,
+      landmark: item.landmark || '',
+      floor: item.floor || '1F',
+      direction: item.direction || '',
+      accessType: item.access_type || '自由进入',
+      lat: item.lat || 30.658,
+      lng: item.lng || 104.082,
+      entryLat: item.entry_lat || item.lat || 30.658,
+      entryLng: item.entry_lng || item.lng || 104.082,
+      facilities: item.facilities || { baby_station: false, accessible: false, paper: false, soap: false, hand_dryer: false, squat: false, seat: false },
+      operation: item.operation || { type: '24小时', open_time: '00:00:00', close_time: '23:59:00', is_operating: true },
+      status: { color: 'green', confidence: 60, updated_at: now },
+      district: item.district || '春熙路'
+    });
+    successCount++;
+  });
+
+  // 记录导入历史
+  importHistory.unshift({
+    id: `import_${Date.now()}`,
+    fileName: document.getElementById('importFileInput').files[0]?.name || 'unknown',
+    operator: currentUser.name,
+    time: now,
+    total: importPreviewData.length,
+    success: successCount,
+    failed: importPreviewData.length - successCount,
+    status: 'completed'
+  });
+
+  // 显示结果
+  const resultDiv = document.getElementById('importResult');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = `
+    <div style="padding:16px;border-radius:8px;background:var(--success-bg);border:1px solid #BBF7D0;">
+      <div style="font-weight:600;color:#15803D;margin-bottom:4px;">✅ 导入完成</div>
+      <div style="font-size:13px;color:#166534;">
+        成功导入 <strong>${successCount}</strong> 条，失败 <strong>${importPreviewData.length - successCount}</strong> 条。
+        导入的数据已加入审核队列，请前往审核页面进行审核。
+      </div>
+    </div>
+  `;
+
+  // 更新其他页面
+  renderAll();
+  renderImportHistory();
+  cancelImport();
+  showToast(`成功导入 ${successCount} 条数据，已加入审核队列`);
+}
+
+function renderImportHistory() {
+  const tbody = document.getElementById('importHistoryBody');
+  const empty = document.getElementById('importHistoryEmpty');
+
+  if (importHistory.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = importHistory.map(h => `
+    <tr>
+      <td>${escHtml(h.fileName)}</td>
+      <td>${escHtml(h.operator)}</td>
+      <td>${formatTime(h.time)}</td>
+      <td>${h.total}</td>
+      <td style="color:var(--success);">${h.success}</td>
+      <td style="color:var(--danger);">${h.failed}</td>
+      <td><span class="badge badge-green">完成</span></td>
+    </tr>
+  `).join('');
+}
+
+// ===== Render All =====
+function renderAll() {
+  renderReviewTable();
+  if (currentPage === 'dashboard') renderDashboard();
+  if (currentPage === 'manage') renderManage();
+}
+
+// ===== Helpers =====
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+  renderReviewTable();
+  // pre-fill for quick login testing
+  document.getElementById('adminIdInput').value = 'admin_l3';
+});
+</script>
+
+</body>
+</html>

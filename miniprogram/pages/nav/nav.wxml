@@ -1,0 +1,61 @@
+<!-- pages/nav/nav.wxml - 导航引导页（上下分屏布局） -->
+<view class="nav-page">
+
+  <!-- 上部：地图区域 -->
+  <view class="nav-map-area">
+    <map
+      id="navMap"
+      class="nav-map"
+      subkey="{{mapKey}}"
+      latitude="{{latitude}}"
+      longitude="{{longitude}}"
+      scale="{{scale}}"
+      markers="{{markers}}"
+      polyline="{{polyline}}"
+      show-location="{{true}}"
+      show-compass="{{false}}"
+      enable-3D="{{false}}"
+      enable-overlooking="{{false}}"
+      enable-zoom="{{true}}"
+      enable-scroll="{{true}}"
+      enable-rotate="{{false}}"
+    >
+    </map>
+  </view>
+
+  <!-- 下部：步骤卡片区域 -->
+  <scroll-view scroll-y class="nav-steps-area">
+    <view class="nav-steps-card">
+
+      <!-- 标题 -->
+      <view class="nav-destination">
+        <text class="nav-dest-name">🧭 {{toiletName}}</text>
+        <view class="nav-dest-meta">
+          <text class="nav-dest-status">● {{statusLabel}}</text>
+          <text class="nav-dest-walk">🚶 {{walkTimeText}}</text>
+        </view>
+      </view>
+
+      <!-- 步骤列表 -->
+      <view class="nav-steps">
+        <text class="nav-steps-title">步行路线指引</text>
+        <view wx:for="{{steps}}" wx:key="index" class="nav-step">
+          <view class="step-num">
+            <text>{{index + 1}}</text>
+          </view>
+          <text class="step-text">{{item}}</text>
+        </view>
+      </view>
+
+      <!-- 底部按钮区 -->
+      <view class="nav-actions">
+        <button class="nav-start-btn" bindtap="onStartNav">开始导航</button>
+        <text class="nav-tip-text">跳转导航后返回将自动弹出反馈</text>
+        <button class="nav-arrive-btn" bindtap="onArrive">我到了</button>
+        <text class="nav-feedback-link" bindtap="onDirectFeedback">直接反馈状态</text>
+      </view>
+
+    </view>
+  </scroll-view>
+
+</view>

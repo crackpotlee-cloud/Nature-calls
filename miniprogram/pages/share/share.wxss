@@ -1,0 +1,136 @@
+/* pages/share/share.wxss - 分享落地页样式 */
+
+.page-container {
+  width: 100vw;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* 顶部横幅 */
+.share-header {
+  background: linear-gradient(135deg, #FF6B35, #FF5722);
+  padding: 40px 16px 24px;
+  color: #fff;
+  text-align: center;
+}
+.share-from {
+  font-size: 12px;
+  opacity: 0.8;
+  display: block;
+  margin-bottom: 4px;
+}
+.share-title {
+  font-size: 18px;
+  font-weight: 700;
+  display: block;
+}
+
+/* 滚动 */
+.share-scroll {
+  height: calc(100vh - 120px);
+}
+
+/* 内容 */
+.detail-content {
+  padding: 16px;
+  padding-bottom: 40px;
+}
+
+/* 行 */
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 13px;
+}
+.detail-row:last-child {
+  border-bottom: none;
+}
+.row-key {
+  color: #999;
+  flex-shrink: 0;
+}
+.row-val {
+  color: #333;
+  font-weight: 500;
+}
+.row-val-right {
+  text-align: right;
+  max-width: 220px;
+  line-height: 1.4;
+}
+
+/* 状态指示器 */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.status-dot.green { background: #34A853; }
+.status-dot.yellow { background: #FBBC04; }
+.status-dot.red { background: #EA4335; }
+.status-shape { font-size: 10px; margin-left: 2px; }
+
+/* 确认区域 */
+.confirm-section {
+  text-align: center;
+  margin-top: 24px;
+}
+.confirm-hint {
+  font-size: 13px;
+  color: #999;
+  display: block;
+  margin-bottom: 10px;
+}
+.confirm-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.opt-btn {
+  flex: 1;
+  height: 44px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.opt-btn:active {
+  transform: scale(0.98);
+}
+.opt-btn.good {
+  border-color: #34A853;
+  color: #34A853;
+}
+.opt-btn.good:active {
+  background: #E8F5E9;
+}
+.opt-btn.bad {
+  border-color: #EA4335;
+  color: #EA4335;
+}
+.opt-btn.bad:active {
+  background: #FFEBEE;
+}
+
+/* 加载 */
+.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 0;
+}
+.loading-hint {
+  font-size: 14px;
+  color: #999;
+  margin-top: 16px;
+}

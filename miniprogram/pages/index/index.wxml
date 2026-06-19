@@ -1,0 +1,123 @@
+<!-- pages/index/index.wxml - 首页 -->
+<view class="page-container">
+
+  <!-- 全屏地图 -->
+  <map
+    id="homeMap"
+    class="home-map"
+    subkey="{{mapKey}}"
+    latitude="{{latitude}}"
+    longitude="{{longitude}}"
+    scale="{{mapScale}}"
+    markers="{{markers}}"
+    show-location="{{true}}"
+    show-compass="{{false}}"
+    enable-3D="{{false}}"
+    enable-overlooking="{{false}}"
+    enable-zoom="{{true}}"
+    enable-scroll="{{true}}"
+    enable-rotate="{{false}}"
+    bindmarkertap="onMarkerTap"
+    bindtap="onMapTap"
+  >
+    <!-- 自定义callout -->
+    <cover-view slot="callout">
+      <cover-view marker-id="{{calloutMarkerId}}" class="map-callout">
+        <cover-view class="callout-name">{{calloutName}}</cover-view>
+      </cover-view>
+    </cover-view>
+  </map>
+
+  <!-- 顶部信息栏 -->
+  <cover-view class="home-header">
+    <cover-view class="location-info">
+      <text class="location-pin">📍</text>
+      <text class="location-text">{{locationName}}</text>
+    </cover-view>
+  </cover-view>
+
+  <!-- 右下角操作按钮组 -->
+  <cover-view class="right-btn-group">
+    <cover-view class="locate-btn" bindtap="onLocate">
+      <text class="locate-icon">⊙</text>
+    </cover-view>
+    <cover-view class="add-btn" bindtap="onAddToilet">
+      <text class="add-btn-icon">+</text>
+    </cover-view>
+  </cover-view>
+
+  <!-- "急"大按钮 - 卡片显示时隐藏 -->
+  <view class="emergency-btn-container" hidden="{{markerCardVisible}}">
+    <view 
+      class="emergency-btn"
+      bindtap="onEmergencyTap"
+      bindlongpress="onEmergencyLongPress"
+    >
+      <text class="emergency-text">急</text>
+    </view>
+    <text class="emergency-hint">长按选场景</text>
+  </view>
+
+  <!-- 地图标记Waze风格大卡片 -->
+  <view class="marker-card {{markerCardVisible ? 'show' : ''}}">
+    <!-- 名称 -->
+    <view class="mc-name">{{selectedToilet.name}}</view>
+
+    <!-- 状态灯 + 可信度 + 更新时间 -->
+    <view class="mc-status-row">
+      <view class="status-indicator">
+        <view class="status-dot {{selectedToilet.status_color}}"></view>
+        <text class="mc-status-text">{{statusLabel}}</text>
+      </view>
+      <text class="mc-confidence">{{statusConfidence}}%可信</text>
+      <text class="mc-update">{{statusUpdateTime}}</text>
+    </view>
+
+    <!-- 标签行：准入 + 质量 -->
+    <view class="mc-tags">
+      <view class="mc-tag mc-tag-access">{{accessLabel}}</view>
+      <view class="mc-tag mc-tag-quality" wx:if="{{qualityLabel}}">{{qualityLabel}}</view>
+    </view>
+
+    <!-- 步行时间 + 距离 -->
+    <view class="mc-walk-row">
+      <text class="mc-walk">🚶 {{walkTimeText}}</text>
+      <text class="mc-distance">· {{walkDistanceText}}</text>
+    </view>
+
+    <!-- 底部双按钮 -->
+    <view class="mc-actions">
+      <view class="mc-btn mc-btn-go" bindtap="onGoToNav">去这里</view>
+      <view class="mc-btn mc-btn-detail" bindtap="onMarkerCardTap">详情</view>
+    </view>
+  </view>
+
+  <!-- 场景选择面板遮罩 -->
+  <view class="sheet-overlay {{scenePanelVisible ? 'show' : ''}}" bindtap="hideScenePanel"></view>
+
+  <!-- 场景选择面板 -->
+  <view class="sheet-panel {{scenePanelVisible ? 'show' : ''}}" style="bottom: {{scenePanelVisible ? 0 : -500}}px">
+    <view class="sheet-handle"></view>
+    <text class="scene-title">选择你的急法</text>
+    <view class="scene-options">
+      <view class="scene-option" bindtap="onSelectScene" data-scene="diarrhea">
+        <text class="scene-emoji">🏃</text>
+        <text class="scene-name">腹泻急</text>
+        <text class="scene-desc">最快+有纸+隐私</text>
+      </view>
+      <view class="scene-option" bindtap="onSelectScene" data-scene="kids">
+        <text class="scene-emoji">👶</text>
+        <text class="scene-name">带娃急</text>
+        <text class="scene-desc">母婴台+干净</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-overlay {{loadingVisible ? 'show' : ''}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在找厕所...</text>
+    <text class="loading-subtext">扫描附近可用厕所</text>
+  </view>
+
+</view>
