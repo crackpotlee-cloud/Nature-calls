@@ -578,11 +578,18 @@ function recommendToilet(params = {}) {
         isDegraded = candidates.length > 0
       }
 
-      // 按综合推荐分数排序
+      // 按距离优先排序：smart模式下距离最近的永远排第一
+      // diarrhea/kids模式在距离优先的基础上考虑设施匹配
       candidates.sort((a, b) => {
-        const scoreA = computeRecommendScore(a, scene)
-        const scoreB = computeRecommendScore(b, scene)
-        return scoreB - scoreA
+        if (scene === 'smart') {
+          // 纯距离优先
+          return a.distance_m - b.distance_m
+        }
+        // diarrhea/kids: 先按设施匹配分组，同组内按距离排序
+        const aMatch = scene === 'diarrhea' ? (a.detail.facilities.paper ? 1 : 0) : (a.detail.facilities.baby_station ? 1 : 0)
+        const bMatch = scene === 'diarrhea' ? (b.detail.facilities.paper ? 1 : 0) : (b.detail.facilities.baby_station ? 1 : 0)
+        if (aMatch !== bMatch) return bMatch - aMatch
+        return a.distance_m - b.distance_m
       })
 
       const recommendations = candidates.slice(0, top_k).map((c, i) =>

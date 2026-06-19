@@ -63,41 +63,46 @@ function createToiletMarkers(toilets) {
 }
 
 /**
- * 获取步行路线 - 调用腾讯地图 walking direction API
- * 返回真实步行路径点串 + 真实步行时间
+ * 获取步行路线 - 调用腾讯地图 direction API
+ * 先尝试步行API，距离超长时降级为驾车API（驾车没有距离限制）
  * @param {Object} from - { lat, lng }
  * @param {Object} to - { lat, lng }
  * @returns {Promise<Object>} { polylines: Array, duration: Number(秒), distance: Number(米) }
  */
 async function getWalkingRoute(from, to) {
-  const result = await fetchWalkingRouteFromTencent(from, to)
-  return result
+  try {
+    return await fetchRouteFromTencent(from, to, 'walking')
+  } catch (walkErr) {
+    console.warn('[map.js] 步行路线失败，尝试驾车路线:', walkErr.message)
+    // 步行超距离限制，降级为驾车路线
+    try {
+      return await fetchRouteFromTencent(from, to, 'driving')
+    } catch (driveErr) {
+      console.error('[map.js] 驾车路线也失败:', driveErr.message)
+      throw driveErr
+    }
+  }
 }
 
 /**
- * 调用腾讯位置服务 walking direction API
- * 官方文档: https://lbs.qq.com/service/webService/webServiceGuide/webServiceRoute
- *
- * polyline压缩格式解压（官方算法，前向差分）:
- * polyline[0], polyline[1] 是起点 lat,lng（已是真实浮点坐标）
- * polyline[2] 开始是偏移量（整数，需除以1000000后累加）
- *
- * 官方解压代码:
- *   for (var i = 2; i < coors.length; i++) {
- *     coors[i] = Number(coors[i - 2]) + Number(coors[i]) / kr;
- *   }
+ * 调用腾讯位置服务 direction API (步行/驾车通用)
+ * 官方前向差分解压算法
  */
-function fetchWalkingRouteFromTencent(from, to) {
+function fetchRouteFromTencent(from, to, mode) {
+  var apiUrl = mode === 'walking'
+    ? 'https://apis.map.qq.com/ws/direction/v1/walking'
+    : 'https://apis.map.qq.com/ws/direction/v1/driving'
+
   return new Promise((resolve, reject) => {
     wx.request({
-      url: 'https://apis.map.qq.com/ws/direction/v1/walking',
+      url: apiUrl,
       data: {
         key: MAP_KEY,
         from: from.lat + ',' + from.lng,
         to: to.lat + ',' + to.lng
       },
       success(res) {
-        console.log('[map.js] 腾讯direction API status:', res.data && res.data.status)
+        console.log('[map.js] 腾讯' + mode + ' API status:', res.data && res.data.status)
         if (res.data && res.data.status === 0 && res.data.result) {
           const route = res.data.result.routes && res.data.result.routes[0]
           if (route && route.polyline) {
@@ -107,14 +112,13 @@ function fetchWalkingRouteFromTencent(from, to) {
             for (var i = 2; i < coors.length; i++) {
               coors[i] = Number(coors[i - 2]) + Number(coors[i]) / kr
             }
-            // 将解压后的坐标放入点串数组
             var coords = []
             for (var i = 0; i < coors.length; i += 2) {
               coords.push({ latitude: coors[i], longitude: coors[i + 1] })
             }
 
             if (coords.length > 1) {
-              console.log('[map.js] 解压成功, 共' + coords.length + '个点, 起点:', coords[0], '终点:', coords[coords.length - 1])
+              console.log('[map.js] ' + mode + ' 解压成功, 共' + coords.length + '个点')
               resolve({
                 polylines: [{
                   points: coords,
@@ -132,13 +136,12 @@ function fetchWalkingRouteFromTencent(from, to) {
             }
           }
         }
-        // API返回错误（配额用完、权限问题等）
         var errMsg = res.data ? res.data.message : 'unknown'
-        console.error('[map.js] 腾讯direction API错误:', res.data && res.data.status, errMsg)
-        reject(new Error('腾讯direction API: ' + errMsg))
+        console.error('[map.js] 腾讯' + mode + ' API错误:', res.data && res.data.status, errMsg)
+        reject(new Error(errMsg))
       },
       fail(err) {
-        console.error('[map.js] 腾讯direction请求失败:', err)
+        console.error('[map.js] 腾讯' + mode + '请求失败:', err)
         reject(err)
       }
     })
