@@ -65,10 +65,12 @@ App({
           lng: res.longitude,
           name: '当前位置'
         }
+        console.log('[app.js] 获取定位成功:', this.globalData.currentLocation)
       },
       fail: () => {
-        // 默认使用成都春熙路
-        console.log('使用默认位置: 成都春熙路')
+        // 无法获取定位时，保持现有值（已在 onLaunch 前初始化为默认值）
+        // 但给一个提示，让用户知道定位失败
+        console.warn('[app.js] 获取定位失败，将使用默认位置')
       }
     })
   }

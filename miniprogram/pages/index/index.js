@@ -7,10 +7,10 @@ const constants = require('../../utils/constants')
 Page({
   data: {
     mapKey: '5CRBZ-IFJW7-YE7XS-HBX5B-R2HSJ-SLBCC', // 腾讯地图Key
-    latitude: 30.658,
-    longitude: 104.082,
+    latitude: 0,   // 初始化为0，等待获取真实位置后设置
+    longitude: 0,
     mapScale: 16,
-    locationName: '成都 · 春熙路IFS附近',
+    locationName: '定位中...',
     markers: [],
     calloutMarkerId: 0,
     calloutName: '',
@@ -37,24 +37,56 @@ Page({
   },
 
   onLoad() {
-    this.loadNearbyToilets()
+    this.initLocation()
   },
 
   onShow() {
-    // 每次回到首页刷新
+    // 每次回到首页刷新位置并重新加载
+    this.initLocation()
+  },
+
+  // 初始化位置
+  initLocation() {
+    const app = getApp()
+    // 如果已有真实位置，直接使用
+    if (app.globalData.currentLocation && app.globalData.currentLocation.lat !== 30.658) {
+      this.useLocation(app.globalData.currentLocation)
+    } else {
+      // 重新获取位置
+      app.getLocation()
+      // 等待一小段时间获取位置（getLocation是异步的）
+      setTimeout(() => {
+        const loc = app.globalData.currentLocation
+        this.useLocation(loc)
+      }, 1500)
+    }
+  },
+
+  // 使用位置加载厕所
+  useLocation(loc) {
+    if (!loc || !loc.lat) {
+      // 如果仍然没有位置，使用成都作为最后的降级
+      loc = { lat: 30.658, lng: 104.082, name: '成都 · 春熙路IFS附近（定位失败）' }
+    }
+    this.setData({
+      latitude: loc.lat,
+      longitude: loc.lng,
+      locationName: loc.name || '当前位置'
+    })
     this.loadNearbyToilets()
   },
 
   // 加载附近厕所
   async loadNearbyToilets() {
     try {
-      const app = getApp()
-      const loc = app.globalData.currentLocation
-      this.setData({
-        latitude: loc.lat,
-        longitude: loc.lng,
-        locationName: loc.name
-      })
+      const loc = {
+        lat: this.data.latitude,
+        lng: this.data.longitude
+      }
+      // 如果位置还没初始化(仍然是0)，不发起请求
+      if (!loc.lat || !loc.lng) {
+        return
+      }
 
       const data = await api.getNearbyToilets({
         lat: loc.lat,

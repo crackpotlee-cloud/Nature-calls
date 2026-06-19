@@ -14,9 +14,12 @@ const ENV = {
 // TODO: 生产部署前切换为 ENV.production
 const BASE_URL = ENV.development
 
+// 引入地图工具函数（用于动态计算距离）
+const mapUtil = require('./map')
+
 // ===== Mock 数据（与后端API文档严格对齐） =====
 
-// 基础厕所数据 — 用于详情接口（嵌套结构）
+// 基础厕所数据 — 仅包含POI坐标和属性，不包含距离/步行时间等动态数据
 const MOCK_TOILET_DETAILS = [
   {
     id: 'toilet_001',
@@ -322,18 +325,13 @@ const MOCK_TOILET_DETAILS = [
 ]
 
 // 附近搜索用扁平结构（与后端 GET /toilets/nearby 响应一致）
-// 额外记录 distance_m / walk_time_min 用于列表排序
-const NEARBY_EXTRA = [
-  { distance_m: 120, walk_time_min: 3 },
-  { distance_m: 280, walk_time_min: 5 },
-  { distance_m: 350, walk_time_min: 6 },
-  { distance_m: 450, walk_time_min: 7 },
-  { distance_m: 380, walk_time_min: 6 },
-  { distance_m: 200, walk_time_min: 4 },
-  { distance_m: 320, walk_time_min: 5 }
-]
+// 距离和步行时间由前端根据真实坐标动态计算，不再写死
+// 移除 NEARBY_EXTRA 硬编码，所有距离/时间均实时计算
 
-function detailToNearbyItem(detail, extra) {
+function detailToNearbyItem(detail, userLat, userLng) {
+  // 根据用户真实坐标动态计算距离
+  const distance_m = mapUtil.getDistance(userLat, userLng, detail.lat, detail.lng)
+  const walk_time_min = Math.max(1, Math.round(distance_m / 80)) // 80m/min
   return {
     id: detail.id,
     name: detail.name,
@@ -356,13 +354,40 @@ function detailToNearbyItem(detail, extra) {
     close_time: detail.operation.close_time,
     status_color: detail.status.color,
     status_confidence: detail.status.confidence,
-    distance_m: extra.distance_m,
-    walk_time_min: extra.walk_time_min
+    distance_m: distance_m,
+    walk_time_min: walk_time_min
   }
 }
 
 // 推荐用数据（与后端 POST /recommend 响应一致）
-function detailToRecommendation(detail, extra, rank) {
+// score 和 score_breakdown 由前端根据规则动态计算（Mock阶段模拟后端推荐引擎）
+function detailToRecommendation(detail, distance_m, walk_time_min, rank, scene) {
+  // 动态计算推荐分数 (模拟后端 recommend_engine.py 逻辑)
+  // 基础分: 距离越近分越高 (距离因子 40%)
+  const maxDist = 2000
+  const distanceScore = Math.max(0, 1 - distance_m / maxDist)
+  // 状态分: green=1.0, yellow=0.6, red=0 (状态因子 30%)
+  const statusScoreMap = { green: 1.0, yellow: 0.6, red: 0.0 }
+  const statusScore = statusScoreMap[detail.status.color] || 0.5
+  // 质量分: 有纸+有肥皂加分 (质量因子 20%)
+  const qualityScore = (
+    (detail.facilities.paper ? 0.3 : 0) +
+    (detail.facilities.soap ? 0.2 : 0) +
+    (detail.facilities.baby_station ? 0.2 : 0) +
+    (detail.facilities.accessible ? 0.1 : 0)
+  )
+  // 场景匹配分 (场景因子 10%)
+  let sceneScore = 0.5
+  if (scene === 'diarrhea' && detail.facilities.paper) sceneScore = 1.0
+  if (scene === 'kids' && detail.facilities.baby_station) sceneScore = 1.0
+
+  const finalScore = Math.min(0.99, Math.max(0.3,
+    distanceScore * 0.4 +
+    statusScore * 0.3 +
+    qualityScore * 0.2 +
+    sceneScore * 0.1
+  ))
+
   return {
     rank,
     toilet_id: detail.id,
@@ -377,14 +402,14 @@ function detailToRecommendation(detail, extra, rank) {
     direction: detail.direction,
     access_type: detail.access_type,
     status_color: detail.status.color,
-    distance_m: extra.distance_m,
-    walk_time_min: extra.walk_time_min,
-    score: [0.925, 0.78, 0.82, 0.65, 0.89, 0.70, 0.75][rank - 1] || 0.5,
+    distance_m: distance_m,
+    walk_time_min: walk_time_min,
+    score: Math.round(finalScore * 1000) / 1000,
     score_breakdown: {
-      arrival: 0.90,
-      availability: 0.95,
-      quality: 0.88,
-      scene_match: 0.90
+      arrival: Math.round(distanceScore * 100),
+      availability: Math.round(statusScore * 100),
+      quality: Math.round(qualityScore * 100),
+      scene_match: Math.round(sceneScore * 100)
     },
     highlights: detail.facilities.paper ? ['干净', '有纸'] : ['24小时', '自由进入']
   }
@@ -434,12 +459,18 @@ function request(options) {
 /**
  * 1. GET /toilets/nearby — 附近厕所搜索
  * 响应为扁平结构（与后端一致）
+ * 距离和步行时间根据用户真实坐标动态计算
  */
 function getNearbyToilets(params = {}) {
   const { lat = 30.658, lng = 104.082, radius = 2000 } = params
   return new Promise((resolve) => {
     setTimeout(() => {
-      const items = MOCK_TOILET_DETAILS.map((d, i) => detailToNearbyItem(d, NEARBY_EXTRA[i]))
+      const userLat = parseFloat(lat)
+      const userLng = parseFloat(lng)
+      const items = MOCK_TOILET_DETAILS
+        .map(d => detailToNearbyItem(d, userLat, userLng))
+        // 过滤超出半径的厕所
+        .filter(t => t.distance_m <= radius)
         .sort((a, b) => a.distance_m - b.distance_m)
       resolve({
         total: items.length,
@@ -479,7 +510,17 @@ function getToiletsByDistrict(params = {}) {
   const { district, page = 1, page_size = 20 } = params
   return new Promise((resolve) => {
     setTimeout(() => {
-      const items = MOCK_TOILET_DETAILS.map((d, i) => detailToNearbyItem(d, NEARBY_EXTRA[i]))
+      // 按区域过滤（Mock阶段：根据name或landmark匹配区域关键词）
+      let filtered = MOCK_TOILET_DETAILS
+      if (district) {
+        filtered = filtered.filter(d =>
+          (d.name && d.name.indexOf(district) !== -1) ||
+          (d.landmark && d.landmark.indexOf(district) !== -1)
+        )
+      }
+      // 使用默认坐标计算距离（按区域搜索时不依赖用户位置）
+      const defaultLat = 30.658, defaultLng = 104.082
+      const items = filtered.map(d => detailToNearbyItem(d, defaultLat, defaultLng))
       resolve({
         total: items.length,
         page,
@@ -493,23 +534,25 @@ function getToiletsByDistrict(params = {}) {
 /**
  * 4. POST /recommend — 智能推荐厕所
  * 响应只包含后端定义的字段（rank, toilet_id, name, type, status_color, distance_m, walk_time_min, score, score_breakdown, highlights, direction）
+ * 分数和排序均动态计算，不再写死
  */
 function recommendToilet(params = {}) {
   const { scene = 'smart', lat = 30.658, lng = 104.082, radius = 2000, top_k = 5 } = params
   return new Promise((resolve) => {
     setTimeout(() => {
-      let candidates = MOCK_TOILET_DETAILS.map((d, i) => ({ detail: d, extra: NEARBY_EXTRA[i] }))
+      const userLat = parseFloat(lat)
+      const userLng = parseFloat(lng)
 
-      // ⚠️ 开发阶段 Mock 数据，生产需对齐后端 recommend_engine.py 的多维度加权逻辑
-      // 当前 Mock 使用简单计分而非真实权重计算
+      let candidates = MOCK_TOILET_DETAILS.map(d => {
+        const distance_m = mapUtil.getDistance(userLat, userLng, d.lat, d.lng)
+        const walk_time_min = Math.max(1, Math.round(distance_m / 80))
+        return { detail: d, distance_m, walk_time_min }
+      }).filter(c => c.distance_m <= radius)
 
       // 硬筛选（对齐后端 recommend_engine.py 的 _apply_hard_filters）
-      const beforeFilterCount = candidates.length
       if (scene === 'diarrhea') {
-        // 腹泻急: 排除所有 has_paper=false 的厕所
         candidates = candidates.filter(c => c.detail.facilities.paper)
       } else if (scene === 'kids') {
-        // 带娃急: 排除所有 has_baby_station=false 的厕所
         candidates = candidates.filter(c => c.detail.facilities.baby_station)
       }
       // 所有模式: 排除红色状态（已确认不可用）
@@ -518,37 +561,31 @@ function recommendToilet(params = {}) {
       // 降级推荐：全部候选被过滤后，重新纳入最近的 yellow 厕所
       let isDegraded = false
       if (candidates.length === 0) {
-        candidates = MOCK_TOILET_DETAILS.map((d, i) => ({ detail: d, extra: NEARBY_EXTRA[i] }))
-        // 重新应用场景硬筛选（但不排除 red）
+        candidates = MOCK_TOILET_DETAILS.map(d => {
+          const distance_m = mapUtil.getDistance(userLat, userLng, d.lat, d.lng)
+          const walk_time_min = Math.max(1, Math.round(distance_m / 80))
+          return { detail: d, distance_m, walk_time_min }
+        }).filter(c => c.distance_m <= radius)
         if (scene === 'diarrhea') {
           candidates = candidates.filter(c => c.detail.facilities.paper)
         } else if (scene === 'kids') {
           candidates = candidates.filter(c => c.detail.facilities.baby_station)
         }
-        // 纳入 yellow 状态候选，按距离排序取最近
         candidates = candidates
           .filter(c => c.detail.status.color === 'yellow' || c.detail.status.color === 'green')
-          .sort((a, b) => a.extra.distance_m - b.extra.distance_m)
+          .sort((a, b) => a.distance_m - b.distance_m)
         isDegraded = candidates.length > 0
       }
 
-      // 根据场景排序
-      if (scene === 'diarrhea') {
-        candidates.sort((a, b) => {
-          const aScore = (a.detail.facilities.paper ? 1 : 0) + (a.extra.walk_time_min < 5 ? 1 : 0)
-          const bScore = (b.detail.facilities.paper ? 1 : 0) + (b.extra.walk_time_min < 5 ? 1 : 0)
-          return bScore - aScore
-        })
-      } else if (scene === 'kids') {
-        candidates.sort((a, b) => {
-          const aScore = (a.detail.facilities.baby_station ? 2 : 0) + (a.detail.stats.cleanliness_good_rate || 0)
-          const bScore = (b.detail.facilities.baby_station ? 2 : 0) + (b.detail.stats.cleanliness_good_rate || 0)
-          return bScore - aScore
-        })
-      }
+      // 按综合推荐分数排序
+      candidates.sort((a, b) => {
+        const scoreA = computeRecommendScore(a, scene)
+        const scoreB = computeRecommendScore(b, scene)
+        return scoreB - scoreA
+      })
 
       const recommendations = candidates.slice(0, top_k).map((c, i) =>
-        detailToRecommendation(c.detail, c.extra, i + 1)
+        detailToRecommendation(c.detail, c.distance_m, c.walk_time_min, i + 1, scene)
       )
 
       resolve({
@@ -566,6 +603,34 @@ function recommendToilet(params = {}) {
       })
     }, 800)
   })
+}
+
+/**
+ * 计算推荐分数 (模拟后端 recommend_engine.py)
+ * 返回 0~1 之间的分数
+ */
+function computeRecommendScore(candidate, scene) {
+  const { detail, distance_m } = candidate
+  const maxDist = 2000
+  const distanceScore = Math.max(0, 1 - distance_m / maxDist)
+  const statusScoreMap = { green: 1.0, yellow: 0.6, red: 0.0 }
+  const statusScore = statusScoreMap[detail.status.color] || 0.5
+  const qualityScore = (
+    (detail.facilities.paper ? 0.3 : 0) +
+    (detail.facilities.soap ? 0.2 : 0) +
+    (detail.facilities.baby_station ? 0.2 : 0) +
+    (detail.facilities.accessible ? 0.1 : 0)
+  )
+  let sceneScore = 0.5
+  if (scene === 'diarrhea' && detail.facilities.paper) sceneScore = 1.0
+  if (scene === 'kids' && detail.facilities.baby_station) sceneScore = 1.0
+
+  return Math.min(0.99, Math.max(0.3,
+    distanceScore * 0.4 +
+    statusScore * 0.3 +
+    qualityScore * 0.2 +
+    sceneScore * 0.1
+  ))
 }
 
 /**

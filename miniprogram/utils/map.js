@@ -103,46 +103,51 @@ async function getWalkingRoute(from, to) {
 /**
  * 调用腾讯位置服务 walking direction API
  * 腾讯API文档: https://lbs.qq.com/service/webService/webServiceGuide/webServiceDirection
- * polyline返回的是压缩格式，需要解压
+ *
+ * 重要: 腾讯步行路线API返回的 polyline 是压缩格式(Coorsub)
+ * 格式: "lat1,lng1;lat2_offset,lng2_offset;..." 每个坐标偏移量需除以1000000
+ * 或者使用 result.routes[0].polyline 数组格式(部分SDK)
+ * 这里统一用小程序的 ws.direction 接口，正确解析返回的 coord_list 或 polyline
  */
 function fetchWalkingRouteFromTencent(from, to) {
   return new Promise((resolve, reject) => {
+    // 腾讯地图HTTPS API，使用 coord_list 返回方式
+    // 文档: 返回结果中包含 routes[0].polyline (压缩格式) 和 routes[0].steps[].polyline
     wx.request({
       url: 'https://apis.map.qq.com/ws/direction/v1/walking',
       data: {
         key: MAP_KEY,
         from: from.lat + ',' + from.lng,
-        to: to.lat + ',' + to.lng
+        to: to.lat + ',' + to.lng,
+        get_speed: 0
       },
       success(res) {
+        console.log('[map.js] 腾讯direction API 响应:', JSON.stringify(res.data).substring(0, 300))
         if (res.data && res.data.status === 0 && res.data.result) {
           const route = res.data.result.routes && res.data.result.routes[0]
           if (route) {
-            // 解压腾讯polyline压缩格式
-            // 腾讯返回的polyline格式: [[lat1,lng1],[lat2,lng2],...]
-            // 其中从第二个点开始，坐标值是相对于前一个点的偏移量
+            // 腾讯API polyline 压缩格式解压
+            // 格式: [lat1, lng1, lat2_offset, lng2_offset, ...]
+            // 从第二个点开始，每个值是前一个值的偏移量(需/1000000)
             const rawPolyline = route.polyline
             const coords = []
-            let prevLat = 0, prevLng = 0
 
-            if (Array.isArray(rawPolyline)) {
-              for (let i = 0; i < rawPolyline.length; i++) {
-                const pt = rawPolyline[i]
-                if (Array.isArray(pt) && pt.length >= 2) {
-                  if (i === 0) {
-                    prevLat = pt[0]
-                    prevLng = pt[1]
-                  } else {
-                    // 压缩格式：当前值 = 前一个值 + 偏移量 / 1000000
-                    prevLat = prevLat + (pt[0] / 1000000)
-                    prevLng = prevLng + (pt[1] / 1000000)
-                  }
-                  coords.push({ latitude: prevLat, longitude: prevLng })
-                }
+            if (Array.isArray(rawPolyline) && rawPolyline.length >= 2) {
+              // 第一个点是绝对坐标(已乘以1000000的整数)
+              let prevLat = rawPolyline[0] / 1000000
+              let prevLng = rawPolyline[1] / 1000000
+              coords.push({ latitude: prevLat, longitude: prevLng })
+
+              // 后续点是偏移量
+              for (let i = 2; i < rawPolyline.length; i += 2) {
+                prevLat = prevLat + (rawPolyline[i] / 1000000)
+                prevLng = prevLng + (rawPolyline[i + 1] / 1000000)
+                coords.push({ latitude: prevLat, longitude: prevLng })
               }
             }
 
-            if (coords.length > 0) {
+            if (coords.length > 1) {
+              console.log('[map.js] 解压成功, 共' + coords.length + '个点')
               resolve({
                 polylines: [{
                   points: coords,
@@ -153,16 +158,19 @@ function fetchWalkingRouteFromTencent(from, to) {
                   borderColor: '#FFFFFF',
                   borderWidth: 1
                 }],
-                duration: route.duration || 0,    // 秒
-                distance: route.distance || 0       // 米
+                duration: route.duration || 0,
+                distance: route.distance || 0
               })
               return
+            } else {
+              console.warn('[map.js] polyline解压失败, 点数不足, raw:', rawPolyline)
             }
           }
         }
         reject(new Error('腾讯direction API返回无效: ' + (res.data ? res.data.message : 'unknown')))
       },
       fail(err) {
+        console.error('[map.js] 腾讯direction请求失败:', err)
         reject(err)
       }
     })

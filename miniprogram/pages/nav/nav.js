@@ -7,8 +7,8 @@ const feedbackPage = require('../feedback/feedback')
 Page({
   data: {
     mapKey: '',
-    latitude: 30.658,
-    longitude: 104.082,
+    latitude: 0,
+    longitude: 0,
     markers: [],
     polyline: [],
     scale: 17,
@@ -28,6 +28,7 @@ Page({
   onLoad(options) {
     const app = getApp()
     const toilet = app.globalData.currentToilet
+    const userLoc = app.globalData.currentLocation || { lat: 30.658, lng: 104.082 }
 
     if (!toilet) {
       wx.showToast({ title: '未找到厕所信息', icon: 'none' })
@@ -45,8 +46,9 @@ Page({
       walkTimeText: walkMin > 0 ? walkMin + '分钟' : '计算中...',
       walkTimeSeconds: walkMin * 60,
       statusLabel: statusInfo.label,
-      latitude: toilet.entry_lat || toilet.lat,
-      longitude: toilet.entry_lng || toilet.lng,
+      // 地图中心设为用户位置，马桶标记会在 renderMap 里添加
+      latitude: userLoc.lat,
+      longitude: userLoc.lng,
       toilet: toilet
     })
 

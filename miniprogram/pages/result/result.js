@@ -6,8 +6,8 @@ const constants = require('../../utils/constants')
 Page({
   data: {
     mapKey: '5CRBZ-IFJW7-YE7XS-HBX5B-R2HSJ-SLBCC',
-    latitude: 30.658,
-    longitude: 104.082,
+    latitude: 0,
+    longitude: 0,
     markers: [],
     polyline: [],
 
@@ -42,6 +42,7 @@ Page({
     const recommendations = app.globalData.currentRecommendations || []
     const currentToilet = app.globalData.currentToilet
     const scene = app.globalData.currentScene
+    const userLoc = app.globalData.currentLocation || { lat: 30.658, lng: 104.082 }
 
     if (!currentToilet) {
       wx.showToast({ title: '请先搜索', icon: 'none' })
@@ -55,7 +56,9 @@ Page({
     this.setData({
       recommendations,
       currentToilet,
-      sceneBadge: sceneLabels[scene] || ''
+      sceneBadge: sceneLabels[scene] || '',
+      latitude: userLoc.lat,
+      longitude: userLoc.lng
     })
 
     this.renderToilet(currentToilet)
