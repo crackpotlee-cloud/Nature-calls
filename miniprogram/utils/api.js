@@ -467,10 +467,10 @@ function getNearbyToilets(params = {}) {
     setTimeout(() => {
       const userLat = parseFloat(lat)
       const userLng = parseFloat(lng)
+      // 动态计算每个厕所的距离，按距离排序后全部返回
+      // Mock阶段不做半径过滤，所有厕所数据都展示在地图上
       const items = MOCK_TOILET_DETAILS
         .map(d => detailToNearbyItem(d, userLat, userLng))
-        // 过滤超出半径的厕所
-        .filter(t => t.distance_m <= radius)
         .sort((a, b) => a.distance_m - b.distance_m)
       resolve({
         total: items.length,
@@ -547,7 +547,8 @@ function recommendToilet(params = {}) {
         const distance_m = mapUtil.getDistance(userLat, userLng, d.lat, d.lng)
         const walk_time_min = Math.max(1, Math.round(distance_m / 80))
         return { detail: d, distance_m, walk_time_min }
-      }).filter(c => c.distance_m <= radius)
+      })
+      // Mock阶段不做半径过滤，全部纳入候选，按多维度打分排序即可
 
       // 硬筛选（对齐后端 recommend_engine.py 的 _apply_hard_filters）
       if (scene === 'diarrhea') {
@@ -565,7 +566,7 @@ function recommendToilet(params = {}) {
           const distance_m = mapUtil.getDistance(userLat, userLng, d.lat, d.lng)
           const walk_time_min = Math.max(1, Math.round(distance_m / 80))
           return { detail: d, distance_m, walk_time_min }
-        }).filter(c => c.distance_m <= radius)
+        })
         if (scene === 'diarrhea') {
           candidates = candidates.filter(c => c.detail.facilities.paper)
         } else if (scene === 'kids') {
