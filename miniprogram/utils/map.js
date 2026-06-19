@@ -118,7 +118,25 @@ function fetchRouteFromTencent(from, to, mode) {
             }
 
             if (coords.length > 1) {
-              console.log('[map.js] ' + mode + ' 解压成功, 共' + coords.length + '个点')
+              // 腾讯API返回的duration有时异常（如403km返回259秒）
+              // 保底逻辑：如果计算速度>200km/h，说明duration不可信，用距离/步行速度估算
+              var rawDuration = route.duration || 0
+              var rawDistance = route.distance || 0
+              var duration = rawDuration
+              if (rawDuration > 0 && rawDistance > 0) {
+                var speedMs = rawDistance / rawDuration // 米/秒
+                var speedKmh = speedMs * 3.6
+                if (speedKmh > 200) {
+                  // duration异常，按步行80m/min估算
+                  duration = Math.round(rawDistance / 80 * 60)
+                  console.warn('[map.js] duration异常(速度' + Math.round(speedKmh) + 'km/h)，改用估算:', duration, '秒')
+                }
+              } else if (rawDistance > 0) {
+                // duration为0但有距离，按步行估算
+                duration = Math.round(rawDistance / 80 * 60)
+              }
+
+              console.log('[map.js] ' + mode + ' 解压成功, 共' + coords.length + '个点, 距离:' + rawDistance + 'm, 时间:' + duration + '秒')
               resolve({
                 polylines: [{
                   points: coords,
@@ -129,8 +147,8 @@ function fetchRouteFromTencent(from, to, mode) {
                   borderColor: '#FFFFFF',
                   borderWidth: 1
                 }],
-                duration: route.duration || 0,
-                distance: route.distance || 0
+                duration: duration,
+                distance: rawDistance
               })
               return
             }
