@@ -6,7 +6,7 @@ App({
     currentLocation: {
       lat: 30.658,
       lng: 104.082,
-      name: '成都 · 春熙路IFS附近'
+      name: '定位中...'
     },
     currentScene: 'smart',
     currentToilet: null,

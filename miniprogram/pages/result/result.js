@@ -42,7 +42,7 @@ Page({
     const recommendations = app.globalData.currentRecommendations || []
     const currentToilet = app.globalData.currentToilet
     const scene = app.globalData.currentScene
-    const userLoc = app.globalData.currentLocation || { lat: 30.658, lng: 104.082 }
+    const userLoc = app.globalData.currentLocation || { lat: 0, lng: 0 }
 
     if (!currentToilet) {
       wx.showToast({ title: '请先搜索', icon: 'none' })
@@ -167,19 +167,25 @@ Page({
     })
 
     // 调用腾讯地图真实步行路线
-    const routeResult = await mapUtil.getWalkingRoute(
-      { lat: userLoc.lat, lng: userLoc.lng },
-      { lat: markerLat, lng: markerLng }
-    )
+    try {
+      const routeResult = await mapUtil.getWalkingRoute(
+        { lat: userLoc.lat, lng: userLoc.lng },
+        { lat: markerLat, lng: markerLng }
+      )
 
-    // 更新真实步行时间
-    let realWalkText = this.data.walkTimeText
-    if (routeResult.duration && routeResult.duration > 0) {
-      const realMin = Math.max(1, Math.round(routeResult.duration / 60))
-      realWalkText = realMin + '分钟'
+      // 更新真实步行时间
+      let realWalkText = this.data.walkTimeText
+      if (routeResult.duration && routeResult.duration > 0) {
+        const realMin = Math.max(1, Math.round(routeResult.duration / 60))
+        realWalkText = realMin + '分钟'
+      }
+
+      this.setData({ markers, polyline: routeResult.polylines || [], walkTimeText: realWalkText })
+    } catch (err) {
+      console.error('[result] 路线规划失败:', err)
+      this.setData({ markers, polyline: [] })
+      wx.showToast({ title: '路线规划失败: ' + (err.message || err), icon: 'none', duration: 3000 })
     }
-
-    this.setData({ markers, polyline: routeResult.polylines || [], walkTimeText: realWalkText })
   },
 
   // 切换备选厕所

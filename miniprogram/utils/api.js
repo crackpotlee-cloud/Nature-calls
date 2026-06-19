@@ -462,7 +462,7 @@ function request(options) {
  * 距离和步行时间根据用户真实坐标动态计算
  */
 function getNearbyToilets(params = {}) {
-  const { lat = 30.658, lng = 104.082, radius = 2000 } = params
+  const { lat = 0, lng = 0, radius = 2000 } = params
   return new Promise((resolve) => {
     setTimeout(() => {
       const userLat = parseFloat(lat)
@@ -519,7 +519,7 @@ function getToiletsByDistrict(params = {}) {
         )
       }
       // 使用默认坐标计算距离（按区域搜索时不依赖用户位置）
-      const defaultLat = 30.658, defaultLng = 104.082
+      const defaultLat = 0, defaultLng = 0
       const items = filtered.map(d => detailToNearbyItem(d, defaultLat, defaultLng))
       resolve({
         total: items.length,
@@ -537,7 +537,7 @@ function getToiletsByDistrict(params = {}) {
  * 分数和排序均动态计算，不再写死
  */
 function recommendToilet(params = {}) {
-  const { scene = 'smart', lat = 30.658, lng = 104.082, radius = 2000, top_k = 5 } = params
+  const { scene = 'smart', lat = 0, lng = 0, radius = 2000, top_k = 5 } = params
   return new Promise((resolve) => {
     setTimeout(() => {
       const userLat = parseFloat(lat)
@@ -638,7 +638,7 @@ function computeRecommendScore(candidate, scene) {
  * 5. POST /recommend/switch-scene — 推荐场景切换
  */
 function switchRecommendScene(params = {}) {
-  const { lat = 30.658, lng = 104.082, from_scene = 'smart', to_scene = 'diarrhea' } = params
+  const { lat = 0, lng = 0, from_scene = 'smart', to_scene = 'diarrhea' } = params
   return recommendToilet({ scene: to_scene, lat, lng })
 }
 

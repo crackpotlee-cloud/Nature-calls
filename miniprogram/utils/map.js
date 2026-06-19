@@ -70,34 +70,8 @@ function createToiletMarkers(toilets) {
  * @returns {Promise<Object>} { polylines: Array, duration: Number(秒), distance: Number(米) }
  */
 async function getWalkingRoute(from, to) {
-  try {
-    const result = await fetchWalkingRouteFromTencent(from, to)
-    if (result && result.polylines && result.polylines.length > 0) {
-      return result
-    }
-  } catch (err) {
-    console.log('腾讯步行路线获取失败，使用直线:', err.message || err)
-  }
-
-  // 降级：直线
-  const distance = getDistance(from.lat, from.lng, to.lat, to.lng)
-  const duration = Math.max(60, Math.round(distance / 80) * 60)
-  return {
-    polylines: [{
-      points: [
-        { latitude: from.lat, longitude: from.lng },
-        { latitude: to.lat, longitude: to.lng }
-      ],
-      color: '#1A73E8',
-      width: 5,
-      dottedLine: false,
-      arrowLine: true,
-      borderColor: '#FFFFFF',
-      borderWidth: 1
-    }],
-    duration: duration,
-    distance: distance
-  }
+  const result = await fetchWalkingRouteFromTencent(from, to)
+  return result
 }
 
 /**

@@ -40,13 +40,9 @@ Page({
   onChooseLocation() {
     wx.chooseLocation({
       success: (res) => {
-        // 坐标范围校验（成都区域：纬度约 30.0-31.0，经度约 103.5-104.5）
+        // 不做地域限制，用户在全国任何位置均可贡献厕所
         const lat = res.latitude
         const lng = res.longitude
-        if (lat < 30.0 || lat > 31.0 || lng < 103.5 || lng > 104.5) {
-          wx.showToast({ title: '位置超出成都范围，请选择附近地点', icon: 'none', duration: 2500 })
-          return
-        }
         this.setData({
           'formData.location': {
             lat,
